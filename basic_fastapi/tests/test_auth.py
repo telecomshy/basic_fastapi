@@ -45,12 +45,9 @@ def test_register_with_error_password(client):
     assert response.status_code == 422
 
 
-def test_login(client):
+def test_login(client, uuid_and_captcha):
     """测试用户成功登陆"""
-
-    uuid = str(uuid4())
-    client.get(f"captcha?uuid={uuid}")
-    captcha = uuid_captcha_mapping[uuid]
+    uuid, captcha = uuid_and_captcha
 
     request_data = {
         "username": "test_user1",
@@ -65,27 +62,50 @@ def test_login(client):
     assert data["username"] == "test_user1"
 
 
-def test_login_with_error_username(client):
-    """测试用户登陆，用户不存在"""
+def test_login_with_error_username(client, uuid_and_captcha):
+    """测试用户登陆时，用户不存在"""
+    uuid, captcha = uuid_and_captcha
 
     request_data = {
         "username": "test_err_user1",
-        "password": "Test_user1"
+        "password": "Test_user1",
+        "uuid": uuid,
+        "captcha": captcha
     }
     response = client.post("login", data=request_data)
     assert response.status_code == 401
     data = response.json()
-    assert "Could not validate credentials" == data["detail"]
+    assert "用户名或密码错误" == data["detail"]
 
 
-def test_login_with_error_password(client):
-    """测试用户登陆，密码错误"""
+def test_login_with_error_password(client, uuid_and_captcha):
+    """测试用户登陆时，密码错误"""
+    uuid, captcha = uuid_and_captcha
 
     request_data = {
         "username": "test_user1",
-        "password": "error_password"
+        "password": "error_password",
+        "uuid": uuid,
+        "captcha": captcha
     }
     response = client.post("login", data=request_data)
     assert response.status_code == 401
     data = response.json()
-    assert "Could not validate credentials" == data["detail"]
+    assert "用户名或密码错误" == data["detail"]
+
+
+def test_login_with_error_captcha(client, uuid_and_captcha):
+    """测试用户登陆验证码错误"""
+    uuid, captcha = uuid_and_captcha
+    captcha = "abc!"
+
+    request_data = {
+        "username": "test_user1",
+        "password": "Test_user1",
+        "uuid": uuid,
+        "captcha": captcha
+    }
+    response = client.post("login", data=request_data)
+    assert response.status_code == 401
+    data = response.json()
+    assert "验证码错误" == data["detail"]
