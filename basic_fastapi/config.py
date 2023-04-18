@@ -2,8 +2,7 @@ from pydantic import BaseSettings, AnyUrl
 
 
 class Settings(BaseSettings):
-    prod_database_url: str = "sqlite:///basic_fastapi/app_prod.db"
-    dev_database_url: str = "sqlite:///basic_fastapi/app_dev.db"
+    database_url: str = "sqlite:///basic_fastapi/app.db"
     secret_key: str = "b89337b4d4383e4e33175824239f82f6961282323af21862caaa94a80b0ca8a7"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 1

@@ -1,6 +1,4 @@
 from ..user.crud import get_user_by_username
-from ..user.router import uuid_captcha_mapping
-from uuid import uuid4
 
 
 def test_register(client, inited_db):

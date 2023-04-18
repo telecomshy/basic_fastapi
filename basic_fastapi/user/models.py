@@ -1,10 +1,7 @@
-from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String
 from typing import Optional
-
-
-class Base(DeclarativeBase):
-    pass
+from ..database import Base
 
 
 class User(Base):

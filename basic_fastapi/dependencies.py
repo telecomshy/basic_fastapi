@@ -2,14 +2,14 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
-from .database import ProdSession
+from .database import SessionDB
 from .config import settings
 from .exceptions import credentials_exception
 from .user.crud import get_user_by_username
 
 
 def get_db():
-    session = ProdSession()
+    session = SessionDB()
     try:
         yield session
     finally:
