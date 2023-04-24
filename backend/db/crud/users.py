@@ -10,7 +10,7 @@ def create_user(db: Session, username: str, password: str) -> User:
     return user
 
 
-def get_user_by_username(db: Session, username) -> User:
+def get_user_by_username(db: Session, username: str) -> User:
     stmt = select(User).filter_by(username=username)
     user = db.scalar(stmt)
     return user
