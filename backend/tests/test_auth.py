@@ -1,4 +1,4 @@
-from ..user.crud import get_user_by_username
+from backend.db.crud.users import get_user_by_username
 
 
 def test_register(client, inited_db):

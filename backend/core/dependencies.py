@@ -2,10 +2,10 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
-from .database import SessionDB
-from .config import settings
-from .exceptions import credentials_exception
-from .user.crud import get_user_by_username
+from backend.db.base import SessionDB
+from backend.core.config import settings
+from backend.core.exceptions import credentials_exception
+from backend.db.crud.users import get_user_by_username
 
 
 def get_db():

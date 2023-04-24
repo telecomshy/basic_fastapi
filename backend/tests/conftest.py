@@ -2,9 +2,9 @@ import pytest
 from fastapi.testclient import TestClient
 from uuid import uuid4
 from ..main import app
-from ..user.models import User
-from ..user.router import get_password_hash, uuid_captcha_mapping
-from ..database import SessionDB
+from backend.db.models.users import User
+from backend.apis.router_user import get_password_hash, uuid_captcha_mapping
+from backend.db.base import SessionDB
 
 
 @pytest.fixture(scope="session")

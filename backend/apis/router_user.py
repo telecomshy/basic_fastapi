@@ -7,10 +7,11 @@ from jose import jwt
 from string import digits, ascii_letters
 from datetime import timedelta, datetime
 from uuid import UUID
-from . import schemas, crud
-from ..config import settings
-from ..dependencies import get_db
-from ..exceptions import user_conflict_exception
+from backend.schemas.users import UserRegister, UserFull
+from backend.db.crud.users import get_user_by_username, create_user
+from backend.core.config import settings
+from backend.core.dependencies import get_db
+from backend.core.exceptions import user_conflict_exception
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 uuid_captcha_mapping = {}
@@ -38,13 +39,13 @@ def create_access_token(payload: dict, expires_delta: timedelta | None = None) -
 router = APIRouter()
 
 
-@router.post("/register", tags=["auth"], summary="user register", response_model=schemas.UserFull)
-def register(user: schemas.UserRegister, db: Session = Depends(get_db)):
-    user_db = crud.get_user_by_username(db, user.username)
+@router.post("/register", tags=["auth"], summary="user register", response_model=UserFull)
+def register(user: UserRegister, db: Session = Depends(get_db)):
+    user_db = get_user_by_username(db, user.username)
     if user_db:
         raise user_conflict_exception
     hashed_password = get_password_hash(user.password)
-    user_db = crud.create_user(db, user.username, hashed_password)
+    user_db = create_user(db, user.username, hashed_password)
     return user_db
 
 
@@ -56,7 +57,7 @@ def login(
         uuid: str = Form(...),
         captcha: str = Form(...)
 ):
-    user_db = crud.get_user_by_username(db, username)
+    user_db = get_user_by_username(db, username)
 
     if user_db is None or not verify_password(password, user_db.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .user.router import router as auth_router
-from .config import settings
+from backend.apis.router_user import router as user_router
+from backend.core.config import settings
 
 tags_metadata = [
     {
@@ -31,4 +31,4 @@ app.add_middleware(
 
 app.uuid_captcha_mapping = {}
 
-app.include_router(auth_router)
+app.include_router(user_router)
