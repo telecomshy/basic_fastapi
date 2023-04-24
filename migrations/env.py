@@ -19,8 +19,8 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 
-from basic_fastapi.database import Base
-from basic_fastapi.user.models import User
+from backend.database import Base
+from backend.user.models import User
 
 target_metadata = [Base.metadata]
 

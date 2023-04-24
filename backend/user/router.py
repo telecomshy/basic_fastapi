@@ -75,7 +75,7 @@ def login(
 def get_captcha_image(uuid: UUID):
     captcha_text = ''.join(random.choices(ascii_letters + digits, k=4))
     captcha_text = captcha_text.lower()
-    image = ImageCaptcha(height=40, width=100, font_sizes=(28, 30, 32))
+    image = ImageCaptcha(height=38, width=100, font_sizes=(27, 29, 31))
     captcha_image = image.generate(captcha_text).getvalue()
     # 保存uuid和验证码的对应关系，登录的时候比较客户端输入的验证码与生成的验证码是否一致
     uuid_captcha_mapping.update({str(uuid): captcha_text})
