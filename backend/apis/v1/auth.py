@@ -39,7 +39,7 @@ def create_access_token(payload: dict, expires_delta: timedelta | None = None) -
 router = APIRouter()
 
 
-@router.post("/register", tags=["auth"], summary="user register", response_model=UserFull)
+@router.post("/register", summary="user register", response_model=UserFull)
 def register(user: UserRegister, db: Session = Depends(get_db)):
     user_db = get_user_by_username(db, user.username)
     if user_db:
@@ -49,7 +49,7 @@ def register(user: UserRegister, db: Session = Depends(get_db)):
     return user_db
 
 
-@router.post("/login", tags=["auth"], summary="user login for access token")
+@router.post("/login", summary="user login for access token")
 def login(
         db: Session = Depends(get_db),
         username: str = Form(...),
@@ -72,7 +72,7 @@ def login(
     return {"access_token": access_token, "username": username}
 
 
-@router.get("/captcha", tags=["auth"], summary="get captcha image", response_class=Response)
+@router.get("/captcha", summary="get captcha image", response_class=Response)
 def get_captcha_image(uuid: UUID):
     captcha_text = ''.join(random.choices(ascii_letters + digits, k=4))
     captcha_text = captcha_text.lower()

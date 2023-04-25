@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.apis.router_auth import router as user_router
+from backend.apis.base import api_router
 from backend.core.config import settings
 
 tags_metadata = [
@@ -29,4 +29,4 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-app.include_router(user_router)
+app.include_router(api_router)
