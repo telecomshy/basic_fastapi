@@ -10,7 +10,8 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(String(30))
     password: Mapped[str]
+    email: Mapped[Optional[str]]
     phone_number: Mapped[Optional[str]]
 
     def __repr__(self) -> str:
-        return f"User(id={self.id!r}, username={self.username!r}, phone_number={self.phone_number!r})"
+        return f"User(id={self.id!r}, username={self.username!r})"
