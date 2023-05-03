@@ -20,9 +20,10 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 
 from backend.db.base import Base
+# Base和模型类如果不在一个模块中，模型类均需要导入，否则无法识别具体要创建哪些类
 from backend.db.models.users import User
 
-target_metadata = [Base.metadata]
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

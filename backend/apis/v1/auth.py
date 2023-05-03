@@ -44,7 +44,8 @@ def register(user: UserRegister, db: Session = Depends(get_db)):
     user_db = get_user_by_username(db, user.username)
     if user_db:
         raise user_conflict_exception
-    hashed_password = get_password_hash(user.password)
+    # TODO 验证password1和password2是否一致
+    hashed_password = get_password_hash(user.password1)
     user_db = create_user(db, user.username, hashed_password)
     return user_db
 

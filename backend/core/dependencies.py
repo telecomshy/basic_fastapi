@@ -1,5 +1,6 @@
-from fastapi import Depends
+from fastapi import Depends, status
 from fastapi.security import OAuth2PasswordBearer
+from fastapi.exceptions import HTTPException
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from backend.db.base import SessionDB
@@ -24,7 +25,11 @@ def get_token_payload(token: str = Depends(oauth2_scheme)) -> dict:
         # 如果token解码失败，或者token过期，都会抛出错误，分别会抛出JWTClaimsError和ExpiredSignatureError错误
         return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
     except JWTError:
-        raise credentials_exception
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token过期或解析失败",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
 
 
 def get_current_user(db: Session = Depends(get_db), payload: dict = Depends(get_token_payload)):
