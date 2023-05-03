@@ -17,7 +17,6 @@ class UserRegister(UserBase):
 
     @validator("password2")
     def match_password(cls, v, values):
-        print(v)
         # 检查密码是否匹配，如果password1验证失败，则不会在values中，所以需要先判断是否在values中
         if 'password1' in values and v != values['password1']:
             raise ValueError("两次输入密码不一致")
