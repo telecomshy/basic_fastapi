@@ -1,5 +1,6 @@
 import random
-from fastapi import APIRouter, Depends, Response, Form, status, HTTPException
+from fastapi import APIRouter, Depends, Response, Form, status
+from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 from captcha.image import ImageCaptcha
 from passlib.context import CryptContext
@@ -11,7 +12,6 @@ from backend.schemas.users import UserRegister, UserFull
 from backend.db.crud.users import get_user_by_username, create_user
 from backend.core.config import settings
 from backend.core.dependencies import get_db
-from backend.core.exceptions import user_conflict_exception
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 uuid_captcha_mapping = {}
@@ -43,13 +43,12 @@ router = APIRouter()
 def register(user: UserRegister, db: Session = Depends(get_db)):
     user_db = get_user_by_username(db, user.username)
     if user_db:
-        raise user_conflict_exception
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="用户名已存在")
     hashed_password = get_password_hash(user.password1)
     user_db = create_user(db, user.username, hashed_password)
     return user_db
 
 
-# TODO 如果前端传的字段为空，报什么错误？
 @router.post("/login", summary="用户登陆")
 def login(
         db: Session = Depends(get_db),

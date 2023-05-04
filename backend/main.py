@@ -2,7 +2,6 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 from pydantic.error_wrappers import ErrorWrapper
 from pydantic import ValidationError
 from backend.apis.base import api_router
@@ -39,12 +38,19 @@ app.include_router(api_router)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """
+    覆盖默认的RequestValidationError,添加reason字段，取第一个
+    """
     raw_errors = exc.raw_errors
     error_wrapper: ErrorWrapper = raw_errors[0]
     pydantic_validation_error: ValidationError = error_wrapper.exc
     validation_errors = pydantic_validation_error.errors()
+    first_error_msg = validation_errors[0]["msg"]
 
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"detail": jsonable_encoder(validation_errors)}
+        content={
+            "detail": validation_errors,
+            "reason": first_error_msg
+        }
     )
