@@ -39,18 +39,18 @@ def create_access_token(payload: dict, expires_delta: timedelta | None = None) -
 router = APIRouter()
 
 
-@router.post("/register", summary="user register", response_model=UserFull)
+@router.post("/register", summary="用户注册", response_model=UserFull)
 def register(user: UserRegister, db: Session = Depends(get_db)):
     user_db = get_user_by_username(db, user.username)
     if user_db:
         raise user_conflict_exception
-    # TODO 验证password1和password2是否一致
     hashed_password = get_password_hash(user.password1)
     user_db = create_user(db, user.username, hashed_password)
     return user_db
 
 
-@router.post("/login", summary="user login for access token")
+# TODO 如果前端传的字段为空，报什么错误？
+@router.post("/login", summary="用户登陆")
 def login(
         db: Session = Depends(get_db),
         username: str = Form(...),
@@ -73,7 +73,7 @@ def login(
     return {"access_token": access_token, "username": username}
 
 
-@router.get("/captcha", summary="get captcha image", response_class=Response)
+@router.get("/captcha", summary="获取验证码", response_class=Response)
 def get_captcha_image(uuid: UUID):
     captcha_text = ''.join(random.choices(ascii_letters + digits, k=4))
     captcha_text = captcha_text.lower()
