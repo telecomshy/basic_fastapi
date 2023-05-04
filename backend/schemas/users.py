@@ -1,23 +1,24 @@
-from pydantic import BaseModel, Field, constr, EmailStr, validator, SecretStr
+from pydantic import Field, constr, EmailStr, validator
+from backend.schemas.base import BaseModel
 
 PASS_PAT = r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?\d)(?=.*?[!@#$%^&*._-]).{8,}$"
 
 
 class UserBase(BaseModel):
-    # username: str = Field(..., min_length=6, max_length=20, description="用户名不能少于6个字符，不能超过20个字符")
-    username: constr(min_length=6, max_length=20)
+    username: constr(min_length=6, max_length=20) = Field(..., title="用户名",
+                                                          description="用户名不能少于6个字符，不能超过20个字符")
 
 
 class UserRegister(UserBase):
     # 密码必须大于8个字符，包含大小写字母，数字以及特殊字符
-    password1: str = Field(..., regex=PASS_PAT, description="密码必须大于8个字符，且包含大小写字母、数字以及特殊字符")
-    password2: str
-    email: EmailStr | None
-    phone_number: str | None
+    password1: constr(regex=PASS_PAT) = Field(..., title="密码",
+                                              description="密码必须大于8个字符，且包含大小写字母、数字以及特殊字符")
+    password2: str = Field(..., title="重复密码")
+    email: EmailStr | None = Field(title="邮箱")
+    phone_number: str | None = Field(title="手机号码")
 
     @validator("password2")
     def match_password(cls, v, values):
-        print(v)
         # 检查密码是否匹配，如果password1验证失败，则不会在values中，所以需要先判断是否在values中
         if 'password1' in values and v != values['password1']:
             raise ValueError("两次输入密码不一致")
@@ -25,9 +26,9 @@ class UserRegister(UserBase):
 
 
 class UserFull(UserBase):
-    id: int
-    email: str | None
-    phone_number: str | None
+    id: int = Field(title="用户ID")
+    email: str | None = Field(title="邮箱")
+    phone_number: str | None = Field(title="手机号码")
 
     class Config:
         orm_mode = True
