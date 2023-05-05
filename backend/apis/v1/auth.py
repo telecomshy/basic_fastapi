@@ -57,7 +57,7 @@ async def login(
         uuid: str = Form(...),
         captcha: str = Form(...)
 ):
-    raise TypeError('test')
+    # raise TypeError('test')
     user_db = get_user_by_username(db, username)
 
     if user_db is None or not verify_password(password, user_db.password):
@@ -67,7 +67,7 @@ async def login(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, reason="验证码错误")
 
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
-    # 将{"sub": username}编码成token，并添加过期时间
+    # 将{"sub": username}编码成token，并添加过期时间，过期时间添加了就自动生效
     access_token = create_access_token({"sub": username}, expires_delta=access_token_expires)
     # 返回json对象给前端，除了token，还包含前端需要的其它信息
     return {"access_token": access_token, "username": username}
