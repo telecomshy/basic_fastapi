@@ -1,6 +1,5 @@
 import random
 from fastapi import APIRouter, Depends, Response, Form, status
-from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 from captcha.image import ImageCaptcha
 from passlib.context import CryptContext
@@ -12,6 +11,7 @@ from backend.schemas.users import UserRegister, UserFull
 from backend.db.crud.users import get_user_by_username, create_user
 from backend.core.config import settings
 from backend.core.dependencies import get_db
+from backend.core.exceptions import HTTPException
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 uuid_captcha_mapping = {}
@@ -43,27 +43,28 @@ router = APIRouter()
 def register(user: UserRegister, db: Session = Depends(get_db)):
     user_db = get_user_by_username(db, user.username)
     if user_db:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="用户名已存在")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, reason="用户名已存在")
     hashed_password = get_password_hash(user.password1)
     user_db = create_user(db, user.username, hashed_password)
     return user_db
 
 
 @router.post("/login", summary="用户登陆")
-def login(
+async def login(
         db: Session = Depends(get_db),
         username: str = Form(...),
         password: str = Form(...),
         uuid: str = Form(...),
         captcha: str = Form(...)
 ):
+    raise TypeError('test')
     user_db = get_user_by_username(db, username)
 
     if user_db is None or not verify_password(password, user_db.password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, reason="用户名或密码错误")
 
     if captcha.lower() != uuid_captcha_mapping.get(uuid):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="验证码错误")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, reason="验证码错误")
 
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     # 将{"sub": username}编码成token，并添加过期时间

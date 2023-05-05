@@ -1,11 +1,10 @@
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic.error_wrappers import ErrorWrapper
-from pydantic import ValidationError
+
 from backend.apis.base import api_router
 from backend.core.config import settings
+from backend.core.exceptions import HTTPException
 
 tags_metadata = [
     {
@@ -36,21 +35,36 @@ app.add_middleware(
 app.include_router(api_router)
 
 
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """
-    覆盖默认的RequestValidationError,添加reason字段，取第一个
-    """
-    raw_errors = exc.raw_errors
-    error_wrapper: ErrorWrapper = raw_errors[0]
-    pydantic_validation_error: ValidationError = error_wrapper.exc
-    validation_errors = pydantic_validation_error.errors()
-    first_error_msg = validation_errors[0]["msg"]
-
+# 覆盖默认的HTTPException，修改detail字段为reason字段，避免和pydantic数据验证失败422响应冲突，方便前端统一处理
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={
-            "detail": validation_errors,
-            "reason": first_error_msg
-        }
+        status_code=exc.status_code,
+        content={"reason": exc.reason},
+        headers=exc.headers
     )
+
+
+# from pydantic.error_wrappers import ErrorWrapper
+# from pydantic import ValidationError
+# from fastapi.exceptions import RequestValidationError
+# from fastapi import status
+
+# @app.exception_handler(RequestValidationError)
+# async def validation_exception_handler(request: Request, exc: RequestValidationError):
+#     """
+#     覆盖默认的RequestValidationError,添加reason字段，取第一个
+#     """
+#     raw_errors = exc.raw_errors
+#     error_wrapper: ErrorWrapper = raw_errors[0]
+#     pydantic_validation_error: ValidationError = error_wrapper.exc
+#     validation_errors = pydantic_validation_error.errors()
+#     first_error_msg = validation_errors[0]["msg"]
+#
+#     return JSONResponse(
+#         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+#         content={
+#             "detail": validation_errors,
+#             "reason": first_error_msg
+#         }
+#     )
