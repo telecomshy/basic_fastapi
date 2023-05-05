@@ -11,7 +11,8 @@ def test_register(client, inited_db):
 
     request_data = {
         "username": "test_user2",
-        "password": "Test_user2"
+        "password1": "Test_user2",
+        "password2": "Test_user2"
     }
     response = client.post("/register", json=request_data)
     assert response.status_code == 200
@@ -26,7 +27,8 @@ def test_register_with_error_username(client):
 
     request_data = {
         "username": "test_user1",
-        "password": "Test_user1"
+        "password1": "Test_user1",
+        "password2": "Test_user1"
     }
     response = client.post("/register", json=request_data)
     assert response.status_code == 409
@@ -37,10 +39,13 @@ def test_register_with_error_password(client):
 
     request_data = {
         "username": "test_user3",
-        "password": "test123"
+        "password1": "test123",
+        "password2": "test123"
     }
     response = client.post("/register", json=request_data)
     assert response.status_code == 422
+    error_type = response.json()['detail'][0]['type']
+    assert error_type == 'value_error.str.regex'
 
 
 def test_login(client, uuid_and_captcha):
@@ -73,7 +78,7 @@ def test_login_with_error_username(client, uuid_and_captcha):
     response = client.post("login", data=request_data)
     assert response.status_code == 401
     data = response.json()
-    assert "用户名或密码错误" == data["detail"]
+    assert "用户名或密码错误" == data["reason"]
 
 
 def test_login_with_error_password(client, uuid_and_captcha):
@@ -89,7 +94,7 @@ def test_login_with_error_password(client, uuid_and_captcha):
     response = client.post("login", data=request_data)
     assert response.status_code == 401
     data = response.json()
-    assert "用户名或密码错误" == data["detail"]
+    assert "用户名或密码错误" == data["reason"]
 
 
 def test_login_with_error_captcha(client, uuid_and_captcha):
@@ -106,4 +111,4 @@ def test_login_with_error_captcha(client, uuid_and_captcha):
     response = client.post("login", data=request_data)
     assert response.status_code == 401
     data = response.json()
-    assert "验证码错误" == data["detail"]
+    assert "验证码错误" == data["reason"]
