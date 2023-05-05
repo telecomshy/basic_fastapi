@@ -32,8 +32,6 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-app.include_router(api_router)
-
 
 # 覆盖默认的HTTPException，修改detail字段为reason字段，避免和pydantic数据验证失败422响应冲突，方便前端统一处理
 @app.exception_handler(HTTPException)
@@ -44,6 +42,8 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         headers=exc.headers
     )
 
+
+app.include_router(api_router)
 
 # from pydantic.error_wrappers import ErrorWrapper
 # from pydantic import ValidationError
