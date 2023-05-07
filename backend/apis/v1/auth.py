@@ -9,6 +9,7 @@ from datetime import timedelta, datetime
 from uuid import UUID
 from backend.schemas.users import UserRegisterSche, UserInfoSche, PassUpdateSche
 from backend.db.crud.users import get_user_by_username, create_user, update_user_password
+from backend.db.models.users import User
 from backend.core.config import settings
 from backend.core.dependencies import get_db, get_current_user
 from backend.core.exceptions import HTTPException
@@ -84,10 +85,11 @@ def get_captcha_image(uuid: UUID):
 
 
 @router.post("/update-pass", summary="修改密码", response_model=UserInfoSche)
-def update_password(pass_update_sche: PassUpdateSche, db: Session = Depends(get_db), user_db=Depends(get_current_user)):
+def update_password(pass_update_sche: PassUpdateSche, db: Session = Depends(get_db),
+                    user_db: User = Depends(get_current_user)):
     # 先检查原始密码是否正确
     if not verify_password(pass_update_sche.old_password, user_db.password):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, reason="原始密码错误")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, reason="原始密码错误")
 
     hashed_password = get_password_hash(pass_update_sche.new_password1)
     user_db = update_user_password(db=db, user=user_db, hashed_password=hashed_password)
