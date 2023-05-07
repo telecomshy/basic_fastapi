@@ -7,10 +7,10 @@ from jose import jwt
 from string import digits, ascii_letters
 from datetime import timedelta, datetime
 from uuid import UUID
-from backend.schemas.users import UserRegister, UserFull
+from backend.schemas.users import UserRegister, UserInfo, PassReset
 from backend.db.crud.users import get_user_by_username, create_user
 from backend.core.config import settings
-from backend.core.dependencies import get_db
+from backend.core.dependencies import get_db, get_current_user
 from backend.core.exceptions import HTTPException
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -39,7 +39,7 @@ def create_access_token(payload: dict, expires_delta: timedelta | None = None) -
 router = APIRouter()
 
 
-@router.post("/register", summary="用户注册", response_model=UserFull)
+@router.post("/register", summary="用户注册", response_model=UserInfo)
 def register(user: UserRegister, db: Session = Depends(get_db)):
     user_db = get_user_by_username(db, user.username)
     if user_db:
@@ -82,3 +82,8 @@ def get_captcha_image(uuid: UUID):
     # 保存uuid和验证码的对应关系，登录的时候比较客户端输入的验证码与生成的验证码是否一致
     uuid_captcha_mapping.update({str(uuid): captcha_text})
     return Response(captcha_image, media_type="image/png")
+
+
+@router.post("/reset-pass", summary="重置密码")
+def reset_password(reset_pass: PassReset, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    pass
