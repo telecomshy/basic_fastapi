@@ -7,7 +7,7 @@ from jose import jwt
 from string import digits, ascii_letters
 from datetime import timedelta, datetime
 from uuid import UUID
-from backend.schemas.users import UserRegister, UserInfo, PassReset
+from backend.schemas.users import UserRegisterSche, UserInfoSche, PassUpdateSche
 from backend.db.crud.users import get_user_by_username, create_user, update_user_password
 from backend.core.config import settings
 from backend.core.dependencies import get_db, get_current_user
@@ -39,14 +39,14 @@ def create_access_token(payload: dict, expires_delta: timedelta | None = None) -
 router = APIRouter()
 
 
-@router.post("/register", summary="用户注册", response_model=UserInfo)
-def register(user: UserRegister, db: Session = Depends(get_db)):
-    userdb = get_user_by_username(db, user.username)
-    if userdb:
+@router.post("/register", summary="用户注册", response_model=UserInfoSche)
+def register(user_register_sche: UserRegisterSche, db: Session = Depends(get_db)):
+    user_db = get_user_by_username(db, user_register_sche.username)
+    if user_db:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, reason="用户名已存在")
-    hashed_password = get_password_hash(user.password1)
-    userdb = create_user(db, user.username, hashed_password)
-    return userdb
+    hashed_password = get_password_hash(user_register_sche.password1)
+    user_db = create_user(db, user_register_sche.username, hashed_password)
+    return user_db
 
 
 @router.post("/login", summary="用户登陆")
@@ -57,9 +57,9 @@ async def login(
         uuid: str = Form(...),
         captcha: str = Form(...)
 ):
-    userdb = get_user_by_username(db, username)
+    user_db = get_user_by_username(db, username)
 
-    if userdb is None or not verify_password(password, userdb.password):
+    if user_db is None or not verify_password(password, user_db.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, reason="用户名或密码错误")
 
     if captcha.lower() != uuid_captcha_mapping.get(uuid):
@@ -83,12 +83,12 @@ def get_captcha_image(uuid: UUID):
     return Response(captcha_image, media_type="image/png")
 
 
-@router.post("/reset-pass", summary="重置密码", response_model=UserInfo)
-def reset_password(pass_reset: PassReset, db: Session = Depends(get_db), userdb=Depends(get_current_user)):
+@router.post("/update-pass", summary="修改密码", response_model=UserInfoSche)
+def update_password(pass_update_sche: PassUpdateSche, db: Session = Depends(get_db), user_db=Depends(get_current_user)):
     # 先检查原始密码是否正确
-    if not verify_password(pass_reset.old_password, userdb.password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, reason="原始密码错误")
+    if not verify_password(pass_update_sche.old_password, user_db.password):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, reason="原始密码错误")
 
-    hashed_password = get_password_hash(pass_reset.new_password1)
-    userdb = update_user_password(db=db, user=userdb, hashed_password=hashed_password)
-    return userdb
+    hashed_password = get_password_hash(pass_update_sche.new_password1)
+    user_db = update_user_password(db=db, user=user_db, hashed_password=hashed_password)
+    return user_db

@@ -4,12 +4,12 @@ from backend.schemas.base import BaseModel
 PASS_PAT = r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?\d)(?=.*?[!@#$%^&*._-]).{8,}$"
 
 
-class UserBase(BaseModel):
+class UserBaseSche(BaseModel):
     username: constr(min_length=6, max_length=20) = Field(..., title="用户名",
                                                           description="用户名不能少于6个字符，不能超过20个字符")
 
 
-class UserRegister(UserBase):
+class UserRegisterSche(UserBaseSche):
     # 密码必须大于8个字符，包含大小写字母，数字以及特殊字符
     password1: constr(regex=PASS_PAT) = Field(..., title="密码",
                                               description="密码必须大于8个字符，且包含大小写字母、数字以及特殊字符")
@@ -25,7 +25,7 @@ class UserRegister(UserBase):
         return v
 
 
-class UserInfo(UserBase):
+class UserInfoSche(UserBaseSche):
     id: int = Field(title="用户ID")
     email: str | None = Field(title="邮箱")
     phone_number: str | None = Field(title="手机号码")
@@ -34,7 +34,7 @@ class UserInfo(UserBase):
         orm_mode = True
 
 
-class PassReset(BaseModel):
+class PassUpdateSche(BaseModel):
     old_password: str = Field(..., title="旧密码")
     new_password1: constr(regex=PASS_PAT) = Field(..., title="新密码",
                                                   description="密码必须大于8个字符，且包含大小写字母、数字以及特殊字符")
