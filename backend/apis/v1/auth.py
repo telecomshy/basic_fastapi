@@ -8,7 +8,7 @@ from string import digits, ascii_letters
 from datetime import timedelta, datetime
 from uuid import UUID
 from backend.schemas.users import UserRegister, UserInfo, PassReset
-from backend.db.crud.users import get_user_by_username, create_user
+from backend.db.crud.users import get_user_by_username, create_user, update_user_password
 from backend.core.config import settings
 from backend.core.dependencies import get_db, get_current_user
 from backend.core.exceptions import HTTPException
@@ -41,12 +41,12 @@ router = APIRouter()
 
 @router.post("/register", summary="用户注册", response_model=UserInfo)
 def register(user: UserRegister, db: Session = Depends(get_db)):
-    user_db = get_user_by_username(db, user.username)
-    if user_db:
+    userdb = get_user_by_username(db, user.username)
+    if userdb:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, reason="用户名已存在")
     hashed_password = get_password_hash(user.password1)
-    user_db = create_user(db, user.username, hashed_password)
-    return user_db
+    userdb = create_user(db, user.username, hashed_password)
+    return userdb
 
 
 @router.post("/login", summary="用户登陆")
@@ -57,10 +57,9 @@ async def login(
         uuid: str = Form(...),
         captcha: str = Form(...)
 ):
-    # raise TypeError('test')
-    user_db = get_user_by_username(db, username)
+    userdb = get_user_by_username(db, username)
 
-    if user_db is None or not verify_password(password, user_db.password):
+    if userdb is None or not verify_password(password, userdb.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, reason="用户名或密码错误")
 
     if captcha.lower() != uuid_captcha_mapping.get(uuid):
@@ -84,6 +83,12 @@ def get_captcha_image(uuid: UUID):
     return Response(captcha_image, media_type="image/png")
 
 
-@router.post("/reset-pass", summary="重置密码")
-def reset_password(reset_pass: PassReset, db: Session = Depends(get_db), user=Depends(get_current_user)):
-    pass
+@router.post("/reset-pass", summary="重置密码", response_model=UserInfo)
+def reset_password(pass_reset: PassReset, db: Session = Depends(get_db), userdb=Depends(get_current_user)):
+    # 先检查原始密码是否正确
+    if not verify_password(pass_reset.old_password, userdb.password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, reason="原始密码错误")
+
+    hashed_password = get_password_hash(pass_reset.new_password1)
+    userdb = update_user_password(db=db, user=userdb, hashed_password=hashed_password)
+    return userdb
