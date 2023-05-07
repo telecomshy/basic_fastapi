@@ -21,14 +21,28 @@ class UserRegister(UserBase):
     def match_password(cls, v, values):
         # 检查密码是否匹配，如果password1验证失败，则不会在values中，所以需要先判断是否在values中
         if 'password1' in values and v != values['password1']:
-            raise ValueError("两次输入密码不一致")
+            raise ValueError("两次输入的密码不一致")
         return v
 
 
-class UserFull(UserBase):
+class UserInfo(UserBase):
     id: int = Field(title="用户ID")
     email: str | None = Field(title="邮箱")
     phone_number: str | None = Field(title="手机号码")
 
     class Config:
         orm_mode = True
+
+
+class PassReset(BaseModel):
+    old_password: str = Field(..., title="旧密码")
+    new_password1: constr(regex=PASS_PAT) = Field(..., title="新密码",
+                                                  description="密码必须大于8个字符，且包含大小写字母、数字以及特殊字符")
+    new_password2: str = Field(..., title="重复新密码")
+
+    @validator("new_password2")
+    def match_password(cls, v, values):
+        # 检查密码是否匹配，如果password1验证失败，则不会在values中，所以需要先判断是否在values中
+        if 'new_password1' in values and v != values['new_password1']:
+            raise ValueError("两次输入的新密码不一致")
+        return v
