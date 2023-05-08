@@ -26,3 +26,4 @@
 - 内部抛出的异常统一使用自定义的`HTTPException`，并传入`reason`关键字参数，表明错误原因，方便前端统一处理。
 - 为了区分pydantic模型和sqlalchemy模型，pydantic模型类统一使用`[名词][用途动词][Sche后缀]`为类名，如`UserRegisterSche`
   ，小写加下划线为变量名，如`user_register_sche`，sqlalchemy仅使用名词为类名，而在路径函数中，变量名统一加`_db`后缀。
+- 原则上数据库的`crud`操作不对返回对象为空进行判断，判断统一在路径函数中进行判断处理。
