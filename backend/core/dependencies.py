@@ -10,7 +10,7 @@ from backend.db.base import SessionDB
 from backend.db.crud.users import get_user_by_username
 from backend.db.models.users import User, Menu
 
-oauth2_scheme = OAuth2PasswordBearer('login')
+oauth2_scheme = OAuth2PasswordBearer('token')
 
 
 def get_db():

@@ -79,7 +79,7 @@ def update_password(pass_update_sche: PassUpdateSche, db: Session = Depends(get_
     return user_db
 
 
-@router.get("/get-menus", summary="获取菜单")
+@router.get("/get-menus", summary="获取当前用户菜单")
 def get_current_user_menus(user_db: User = Depends(get_current_user)):
     """根据用户的角色获取相应的菜单"""
 
