@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 from fastapi import Depends, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.exceptions import HTTPException
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from backend.core.config import settings
 from backend.core.utils import verify_password
-from backend.core.exceptions import HTTPException
 from backend.db.base import SessionDB
 from backend.db.crud.users import get_user_by_username
 from backend.db.models.users import User, Menu
@@ -31,7 +31,7 @@ def authenticate_user(
     user_db = get_user_by_username(db, username)
 
     if user_db is None or not verify_password(password, user_db.password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, reason="用户名或密码错误")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
 
     access_token_expires = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
     # 过期时间添加了会自动生效
@@ -48,7 +48,7 @@ def get_token_payload(token: str = Depends(oauth2_scheme)) -> dict:
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            reason="Token过期或解析失败",
+            detail="Token过期或解析失败",
             headers={"WWW-Authenticate": "Bearer"}
         )
 
@@ -56,7 +56,7 @@ def get_token_payload(token: str = Depends(oauth2_scheme)) -> dict:
 def get_current_user(db: Session = Depends(get_db), payload: dict = Depends(get_token_payload)) -> User:
     get_current_user_error = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        reason="无法获取当前用户"
+        detail="无法获取当前用户"
     )
 
     username = payload.get("username")

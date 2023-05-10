@@ -1,6 +1,7 @@
 import random
 from typing import TypeVar
 from fastapi import APIRouter, Depends, Response, Form, status
+from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
 from captcha.image import ImageCaptcha
 from string import digits, ascii_letters
@@ -9,7 +10,6 @@ from backend.schemas.users import UserRegisterSche, UserInfoSche, PassUpdateSche
 from backend.db.crud.users import get_user_by_username, create_user, update_user_password
 from backend.db.models.users import User
 from backend.core.dependencies import get_db, get_current_user, authenticate_user
-from backend.core.exceptions import HTTPException
 from backend.core.utils import verify_password, get_password_hash
 
 router = APIRouter()
@@ -22,7 +22,7 @@ def register(user_register_sche: UserRegisterSche, db: Session = Depends(get_db)
 
     user_db = get_user_by_username(db, user_register_sche.username)
     if user_db:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, reason="用户名已存在")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="用户名已存在")
     hashed_password = get_password_hash(user_register_sche.password1)
     user_db = create_user(db, user_register_sche.username, hashed_password)
     return user_db
@@ -47,7 +47,7 @@ def login(
     """用于普通客户端用户登陆，并添加验证码"""
 
     if captcha.lower() != uuid_captcha_mapping.get(uuid):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, reason="验证码错误")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="验证码错误")
 
     return login_response
 
@@ -72,7 +72,7 @@ def update_password(pass_update_sche: PassUpdateSche, db: Session = Depends(get_
 
     # 先检查原始密码是否正确
     if not verify_password(pass_update_sche.old_password, user_db.password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, reason="原始密码错误")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="原始密码错误")
 
     hashed_password = get_password_hash(pass_update_sche.new_password1)
     user_db = update_user_password(db=db, user=user_db, hashed_password=hashed_password)
