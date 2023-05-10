@@ -1,43 +1,19 @@
 import random
+from typing import TypeVar
 from fastapi import APIRouter, Depends, Response, Form, status
 from sqlalchemy.orm import Session
 from captcha.image import ImageCaptcha
-from passlib.context import CryptContext
-from jose import jwt
 from string import digits, ascii_letters
-from datetime import timedelta, datetime
 from uuid import UUID
 from backend.schemas.users import UserRegisterSche, UserInfoSche, PassUpdateSche
 from backend.db.crud.users import get_user_by_username, create_user, update_user_password
 from backend.db.models.users import User
-from backend.core.config import settings
-from backend.core.dependencies import get_db, get_current_user
+from backend.core.dependencies import get_db, get_current_user, authenticate_user
 from backend.core.exceptions import HTTPException
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-uuid_captcha_mapping = {}
-
-
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
-
-
-def verify_password(password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(password, hashed_password)
-
-
-def create_access_token(payload: dict, expires_delta: timedelta | None = None) -> str:
-    payload = payload.copy()
-    if expires_delta:
-        expires = datetime.utcnow() + expires_delta
-    else:
-        expires = datetime.utcnow() + timedelta(minutes=15)
-    payload.update({"exp": expires})
-    access_token = jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
-    return access_token
-
+from backend.core.utils import verify_password, get_password_hash
 
 router = APIRouter()
+uuid_captcha_mapping = {}
 
 
 @router.post("/register", summary="用户注册", response_model=UserInfoSche)
@@ -52,29 +28,28 @@ def register(user_register_sche: UserRegisterSche, db: Session = Depends(get_db)
     return user_db
 
 
+LoginResponse = TypeVar("LoginResponse", bound=dict)
+
+
+@router.post("/token", summary="仅用于openAPI登录")
+def login_openapi(login_response: LoginResponse = Depends(authenticate_user)) -> LoginResponse:
+    """用户fastapi openAPI授权登录"""
+
+    return login_response
+
+
 @router.post("/login", summary="用户登陆")
-async def login(
-        db: Session = Depends(get_db),
-        username: str = Form(...),
-        password: str = Form(...),
+def login(
         uuid: str = Form(...),
-        captcha: str = Form(...)
-):
-    """用户登陆"""
-
-    user_db = get_user_by_username(db, username)
-
-    if user_db is None or not verify_password(password, user_db.password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, reason="用户名或密码错误")
+        captcha: str = Form(...),
+        login_response: LoginResponse = Depends(authenticate_user)
+) -> LoginResponse:
+    """用于普通客户端用户登陆，并添加验证码"""
 
     if captcha.lower() != uuid_captcha_mapping.get(uuid):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, reason="验证码错误")
 
-    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
-    # 将{"sub": username}编码成token，并添加过期时间，过期时间添加了就自动生效
-    access_token = create_access_token({"username": username}, expires_delta=access_token_expires)
-    # 返回json对象给前端，除了token，还包含前端需要的其它信息
-    return {"access_token": access_token, "username": username}
+    return login_response
 
 
 @router.get("/captcha", summary="获取验证码", response_class=Response)
