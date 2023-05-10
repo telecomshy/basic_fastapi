@@ -1,7 +1,24 @@
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String
+from __future__ import annotations
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, Column, ForeignKey, Table
 from typing import Optional
 from backend.db.base import Base
+
+user_role_relationship = Table(
+    "user_role_relationship",
+    Base.metadata,
+    # 同时设置为primary_key会成为联合主键
+    Column("user_id", ForeignKey("user.id"), primary_key=True),
+    Column("role_id", ForeignKey("role.id"), primary_key=True),
+)
+
+role_perm_relationship = Table(
+    "role_perm_relationship",
+    Base.metadata,
+    # 同时设置为primary_key会成为联合主键
+    Column("role_id", ForeignKey("role.id"), primary_key=True),
+    Column("perm_id", ForeignKey("perm.id"), primary_key=True),
+)
 
 
 class User(Base):
@@ -12,6 +29,25 @@ class User(Base):
     password: Mapped[str]
     email: Mapped[Optional[str]]
     phone_number: Mapped[Optional[str]]
+    roles: Mapped[list[Role]] = relationship(secondary=user_role_relationship, back_populates="users")
 
     def __repr__(self) -> str:
         return f"User(id={self.id!r}, username={self.username!r})"
+
+
+class Role(Base):
+    __tablename__ = "role"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    role_name: Mapped[str]
+    users: Mapped[list[User]] = relationship(secondary=user_role_relationship, back_populates="roles")
+    perms: Mapped[list[Permissions]] = relationship(secondary=role_perm_relationship, back_populates="roles")
+
+
+class Permissions(Base):
+    __tablename__ = "permissions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    perm_name: Mapped[str]
+    perm: Mapped[str]
+    roles: Mapped[list[Role]] = relationship(secondary=role_perm_relationship, back_populates="perms")
