@@ -42,6 +42,8 @@ router = APIRouter()
 
 @router.post("/register", summary="用户注册", response_model=UserInfoSche)
 def register(user_register_sche: UserRegisterSche, db: Session = Depends(get_db)):
+    """用户注册"""
+
     user_db = get_user_by_username(db, user_register_sche.username)
     if user_db:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, reason="用户名已存在")
@@ -58,6 +60,8 @@ async def login(
         uuid: str = Form(...),
         captcha: str = Form(...)
 ):
+    """用户登陆"""
+
     user_db = get_user_by_username(db, username)
 
     if user_db is None or not verify_password(password, user_db.password):
@@ -68,13 +72,15 @@ async def login(
 
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     # 将{"sub": username}编码成token，并添加过期时间，过期时间添加了就自动生效
-    access_token = create_access_token({"sub": username}, expires_delta=access_token_expires)
+    access_token = create_access_token({"username": username}, expires_delta=access_token_expires)
     # 返回json对象给前端，除了token，还包含前端需要的其它信息
     return {"access_token": access_token, "username": username}
 
 
 @router.get("/captcha", summary="获取验证码", response_class=Response)
 def get_captcha_image(uuid: UUID):
+    """获取验证码"""
+
     captcha_text = ''.join(random.choices(ascii_letters + digits, k=4))
     captcha_text = captcha_text.lower()
     image = ImageCaptcha(height=38, width=100, font_sizes=(27, 29, 31))
@@ -87,6 +93,8 @@ def get_captcha_image(uuid: UUID):
 @router.post("/update-pass", summary="修改密码", response_model=UserInfoSche)
 def update_password(pass_update_sche: PassUpdateSche, db: Session = Depends(get_db),
                     user_db: User = Depends(get_current_user)):
+    """更新用户密码"""
+
     # 先检查原始密码是否正确
     if not verify_password(pass_update_sche.old_password, user_db.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, reason="原始密码错误")
@@ -94,3 +102,15 @@ def update_password(pass_update_sche: PassUpdateSche, db: Session = Depends(get_
     hashed_password = get_password_hash(pass_update_sche.new_password1)
     user_db = update_user_password(db=db, user=user_db, hashed_password=hashed_password)
     return user_db
+
+
+@router.get("/get-menus", summary="获取菜单")
+def get_current_user_menus(user_db: User = Depends(get_current_user)):
+    """根据用户的角色获取相应的菜单"""
+
+    menus = set()
+    roles = user_db.roles
+    for role in roles:
+        for menu in role.menus:
+            menus.add(menu)
+    return list(menus)

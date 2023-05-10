@@ -17,7 +17,15 @@ role_perm_relationship = Table(
     Base.metadata,
     # 同时设置为primary_key会成为联合主键
     Column("role_id", ForeignKey("role.id"), primary_key=True),
-    Column("perm_id", ForeignKey("perm.id"), primary_key=True),
+    Column("perm_id", ForeignKey("permission.id"), primary_key=True),
+)
+
+role_menu_relationship = Table(
+    "role_menu_relationship",
+    Base.metadata,
+    # 同时设置为primary_key会成为联合主键
+    Column("role_id", ForeignKey("role.id"), primary_key=True),
+    Column("menu_id", ForeignKey("menu.id"), primary_key=True),
 )
 
 
@@ -41,13 +49,23 @@ class Role(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     role_name: Mapped[str]
     users: Mapped[list[User]] = relationship(secondary=user_role_relationship, back_populates="roles")
-    perms: Mapped[list[Permissions]] = relationship(secondary=role_perm_relationship, back_populates="roles")
+    perms: Mapped[list[Permission]] = relationship(secondary=role_perm_relationship, back_populates="roles")
+    menus: Mapped[list[Menu]] = relationship(secondary=role_menu_relationship, back_populates="roles")
 
 
-class Permissions(Base):
-    __tablename__ = "permissions"
+class Permission(Base):
+    __tablename__ = "permission"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    perm_name: Mapped[str]
-    perm: Mapped[str]
+    perm_name: Mapped[str]  # 展示给前端的权限，如：删除用户，添加用户等
+    perm_rule: Mapped[str]  # 实际的权限规则
     roles: Mapped[list[Role]] = relationship(secondary=role_perm_relationship, back_populates="perms")
+
+
+class Menu(Base):
+    __tablename__ = "menu"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    menu_name: Mapped[str]
+    menu_url: Mapped[str]
+    roles: Mapped[list[Role]] = relationship(secondary=role_menu_relationship, back_populates="menus")

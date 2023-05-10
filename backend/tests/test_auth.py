@@ -152,7 +152,7 @@ def test_update_user_password_with_error_old_password(client):
     assert data["reason"] == "原始密码错误"
 
 
-def test_update_user_password_with_dismatch_new_password(client):
+def test_update_user_password_with_mismatching_new_password(client):
     request_data = {
         "old_password": "Test_user1",
         "new_password1": "Test_user1_temp1",

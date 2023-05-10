@@ -1,3 +1,4 @@
+from typing import Never
 from fastapi import Depends, status
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.exceptions import HTTPException
@@ -5,8 +6,8 @@ from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from backend.db.base import SessionDB
 from backend.core.config import settings
-from backend.db.crud.users import get_user_by_username
-from backend.db.models.users import User
+from backend.db.crud.users import get_user_by_username, get_user_permissions
+from backend.db.models.users import User, Role, Menu
 
 
 def get_db():
@@ -38,7 +39,7 @@ def get_current_user(db: Session = Depends(get_db), payload: dict = Depends(get_
         detail="无法获取当前用户"
     )
 
-    username = payload.get("sub")
+    username = payload.get("username")
     if username is None:
         raise get_current_user_error
 
@@ -47,3 +48,25 @@ def get_current_user(db: Session = Depends(get_db), payload: dict = Depends(get_
         raise get_current_user_error
 
     return user_db
+
+
+def get_current_user_menu(user_db: Depends(get_current_user)) -> list[Menu]:
+    """获取当前用户的菜单"""
+
+    menus = set()
+    roles = user_db.roles
+    for role in roles:
+        for menu in role.menus:
+            menus.add(menu)
+    return list(menus)
+
+
+# class RequirePermissions:
+#     def __init__(self, permissions: list[str]):
+#         self.permissions = permissions
+#
+#     def __call__(self, user: User = Depends(get_current_user)) -> Never | None:
+#         user_perms = get_user_permissions(user)
+#
+#         for perm in user_perms:
+#             pass
