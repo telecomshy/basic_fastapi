@@ -1,16 +1,20 @@
 import random
 from typing import TypeVar
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Response, Form, status
 from fastapi.exceptions import HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from captcha.image import ImageCaptcha
 from string import digits, ascii_letters
 from uuid import UUID
+from jose import jwt
 from backend.schemas.users import UserRegisterSche, UserInfoSche, PassUpdateSche
 from backend.db.crud.users import get_user_by_username, create_user, update_user_password
 from backend.db.models.users import User
-from backend.core.dependencies import get_db, get_current_user, authenticate_user
+from backend.core.dependencies import get_db, get_current_user
 from backend.core.utils import verify_password, get_password_hash
+from backend.core.config import settings
 
 router = APIRouter()
 uuid_captcha_mapping = {}
@@ -31,10 +35,27 @@ def register(user_register_sche: UserRegisterSche, db: Session = Depends(get_db)
 LoginResponse = TypeVar("LoginResponse", bound=dict)
 
 
+def authenticate_user(db, username, password) -> dict:
+    """登录认证"""
+    user_db = get_user_by_username(db, username)
+
+    if user_db is None or not verify_password(password, user_db.password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
+
+    access_token_expires = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
+    # 过期时间添加了会自动生效
+    payload = {"username": username, "exp": access_token_expires}
+    access_token = jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+    # 返回json对象给前端，除了token，还包含前端需要的其它信息
+    return {"access_token": access_token, "username": username}
+
+
 @router.post("/token", summary="仅用于openAPI登录")
-def login_openapi(login_response: LoginResponse = Depends(authenticate_user)) -> LoginResponse:
+def login_openapi(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()) -> dict:
     """用户fastapi openAPI授权登录"""
 
+    username, password = form_data.username, form_data.password
+    login_response = authenticate_user(db, username, password)
     return login_response
 
 
@@ -42,13 +63,16 @@ def login_openapi(login_response: LoginResponse = Depends(authenticate_user)) ->
 def login(
         uuid: str = Form(...),
         captcha: str = Form(...),
-        login_response: LoginResponse = Depends(authenticate_user)
+        username: str = Form(...),
+        password: str = Form(...),
+        db: Session = Depends(get_db)
 ) -> LoginResponse:
     """用于普通客户端用户登陆，并添加验证码"""
 
     if captcha.lower() != uuid_captcha_mapping.get(uuid):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="验证码错误")
 
+    login_response = authenticate_user(db, username, password)
     return login_response
 
 

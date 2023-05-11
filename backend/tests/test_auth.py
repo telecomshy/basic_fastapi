@@ -90,7 +90,7 @@ def test_login_with_error_username(client, uuid_and_captcha):
     response = client.post("login", data=request_data)
     assert response.status_code == 401
     data = response.json()
-    assert "用户名或密码错误" == data["reason"]
+    assert "用户名或密码错误" == data["detail"]
 
 
 def test_login_with_error_password(client, uuid_and_captcha):
@@ -106,7 +106,7 @@ def test_login_with_error_password(client, uuid_and_captcha):
     response = client.post("login", data=request_data)
     assert response.status_code == 401
     data = response.json()
-    assert "用户名或密码错误" == data["reason"]
+    assert "用户名或密码错误" == data["detail"]
 
 
 def test_login_with_error_captcha(client, uuid_and_captcha):
@@ -123,7 +123,7 @@ def test_login_with_error_captcha(client, uuid_and_captcha):
     response = client.post("login", data=request_data)
     assert response.status_code == 401
     data = response.json()
-    assert "验证码错误" == data["reason"]
+    assert "验证码错误" == data["detail"]
 
 
 def test_update_user_password(client):
@@ -149,7 +149,7 @@ def test_update_user_password_with_error_old_password(client):
     response = client.post("update-pass", json=request_data)
     assert response.status_code == 401
     data = response.json()
-    assert data["reason"] == "原始密码错误"
+    assert data["detail"] == "原始密码错误"
 
 
 def test_update_user_password_with_mismatching_new_password(client):

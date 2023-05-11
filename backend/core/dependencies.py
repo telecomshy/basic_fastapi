@@ -1,11 +1,9 @@
-from datetime import datetime, timedelta
 from fastapi import Depends, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.exceptions import HTTPException
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from backend.core.config import settings
-from backend.core.utils import verify_password
 from backend.db.base import SessionDB
 from backend.db.crud.users import get_user_by_username
 from backend.db.models.users import User, Menu
@@ -19,26 +17,6 @@ def get_db():
         yield session
     finally:
         session.close()
-
-
-def authenticate_user(
-        db: Session = Depends(get_db),
-        form_data: OAuth2PasswordRequestForm = Depends()
-) -> dict:
-    """登录认证"""
-
-    username, password = form_data.username, form_data.password
-    user_db = get_user_by_username(db, username)
-
-    if user_db is None or not verify_password(password, user_db.password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
-
-    access_token_expires = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
-    # 过期时间添加了会自动生效
-    payload = {"username": username, "exp": access_token_expires}
-    access_token = jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
-    # 返回json对象给前端，除了token，还包含前端需要的其它信息
-    return {"access_token": access_token, "username": username}
 
 
 def get_token_payload(token: str = Depends(oauth2_scheme)) -> dict:
