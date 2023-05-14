@@ -46,3 +46,11 @@ class PassUpdateSche(BaseModel):
         if 'new_password1' in values and v != values['new_password1']:
             raise ValueError("两次输入的新密码不一致")
         return v
+
+
+class PermissionInfoSche(BaseModel):
+    perm_name: str = Field(..., title="权限名称")
+    perm_rule: str = Field(..., title="权限规则")
+
+    class Config:
+        orm_mode = True
