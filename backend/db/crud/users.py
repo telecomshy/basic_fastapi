@@ -26,11 +26,11 @@ def update_user_password(db: Session, user: User, hashed_password: str) -> User:
     return user
 
 
-def get_user_permissions(user: User) -> set[Permission]:
+def get_user_permissions(user: User) -> list[Permission]:
     """获取用户所有权限"""
 
     perms = set()
     for role in user.roles:
         for perm in role.perms:
             perms.add(perm)
-    return perms
+    return list(perms)

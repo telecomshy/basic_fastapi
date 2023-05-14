@@ -9,7 +9,7 @@ from uuid import UUID
 from backend.schemas.users import UserRegisterSche, UserInfoSche, PassUpdateSche
 from backend.db.crud.users import get_user_by_username, create_user, update_user_password
 from backend.db.models.users import User
-from backend.core.dependencies import get_db, get_current_user, authenticate_user
+from backend.core.dependencies import session, current_user, authenticate_user, route_function_name, check_permission
 from backend.core.utils import verify_password, get_password_hash
 
 router = APIRouter()
@@ -17,7 +17,7 @@ uuid_captcha_mapping = {}
 
 
 @router.post("/register", summary="用户注册", response_model=UserInfoSche)
-def register(user_register_sche: UserRegisterSche, db: Session = Depends(get_db)):
+def register(user_register_sche: UserRegisterSche, db: Session = Depends(session)):
     """用户注册"""
 
     user_db = get_user_by_username(db, user_register_sche.username)
@@ -66,8 +66,8 @@ def get_captcha_image(uuid: UUID):
 
 
 @router.post("/update-pass", summary="修改密码", response_model=UserInfoSche)
-def update_password(pass_update_sche: PassUpdateSche, db: Session = Depends(get_db),
-                    user_db: User = Depends(get_current_user)):
+def update_password(pass_update_sche: PassUpdateSche, db: Session = Depends(session),
+                    user_db: User = Depends(current_user)):
     """更新用户密码"""
 
     # 先检查原始密码是否正确
@@ -79,13 +79,8 @@ def update_password(pass_update_sche: PassUpdateSche, db: Session = Depends(get_
     return user_db
 
 
-@router.get("/get-menus", summary="获取当前用户菜单")
-def get_current_user_menus(user_db: User = Depends(get_current_user)):
-    """根据用户的角色获取相应的菜单"""
+@router.get("/get-perms", summary="获取当前用户权限", dependencies=[Depends(check_permission)])
+def view_user(func_name=Depends(route_function_name)):
+    """根据用户角色获取相应的菜单"""
 
-    menus = set()
-    roles = user_db.roles
-    for role in roles:
-        for menu in role.menus:
-            menus.add(menu)
-    return list(menus)
+    return func_name

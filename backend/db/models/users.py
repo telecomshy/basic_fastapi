@@ -50,7 +50,7 @@ class Role(Base):
     role_name: Mapped[str]
     users: Mapped[list[User]] = relationship(secondary=user_role_relationship, back_populates="roles")
     perms: Mapped[list[Permission]] = relationship(secondary=role_perm_relationship, back_populates="roles")
-    menus: Mapped[list[Menu]] = relationship(secondary=role_menu_relationship, back_populates="roles")
+    # menus: Mapped[list[Menu]] = relationship(secondary=role_menu_relationship, back_populates="roles")
 
 
 class Permission(Base):
@@ -62,10 +62,10 @@ class Permission(Base):
     roles: Mapped[list[Role]] = relationship(secondary=role_perm_relationship, back_populates="perms")
 
 
-class Menu(Base):
-    __tablename__ = "menu"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    menu_name: Mapped[str]
-    menu_url: Mapped[str]
-    roles: Mapped[list[Role]] = relationship(secondary=role_menu_relationship, back_populates="menus")
+# class Menu(Base):
+#     __tablename__ = "menu"
+#
+#     id: Mapped[int] = mapped_column(primary_key=True)
+#     menu_name: Mapped[str]
+#     menu_url: Mapped[str]
+#     roles: Mapped[list[Role]] = relationship(secondary=role_menu_relationship, back_populates="menus")

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from fastapi import Depends, status
+from fastapi import Depends, status, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.exceptions import HTTPException
 from jose import JWTError, jwt
@@ -7,22 +7,22 @@ from sqlalchemy.orm import Session
 from backend.core.config import settings
 from backend.core.utils import verify_password
 from backend.db.base import SessionDB
-from backend.db.crud.users import get_user_by_username
-from backend.db.models.users import User, Menu
+from backend.db.crud.users import get_user_by_username, get_user_permissions
+from backend.db.models.users import User
 
 oauth2_scheme = OAuth2PasswordBearer('token')
 
 
-def get_db():
-    session = SessionDB()
+def session():
+    session_db = SessionDB()
     try:
-        yield session
+        yield session_db
     finally:
-        session.close()
+        session_db.close()
 
 
 def authenticate_user(
-        db: Session = Depends(get_db),
+        db: Session = Depends(session),
         form_data: OAuth2PasswordRequestForm = Depends()
 ) -> dict:
     """登录认证"""
@@ -41,7 +41,7 @@ def authenticate_user(
     return {"access_token": access_token, "username": username}
 
 
-def get_token_payload(token: str = Depends(oauth2_scheme)) -> dict:
+def token_payload(token: str = Depends(oauth2_scheme)) -> dict:
     try:
         # 如果token解码失败，或者token过期，都会抛出错误，分别会抛出JWTClaimsError和ExpiredSignatureError错误
         return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
@@ -53,7 +53,7 @@ def get_token_payload(token: str = Depends(oauth2_scheme)) -> dict:
         )
 
 
-def get_current_user(db: Session = Depends(get_db), payload: dict = Depends(get_token_payload)) -> User:
+def current_user(db: Session = Depends(session), payload: dict = Depends(token_payload)) -> User:
     get_current_user_error = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="无法获取当前用户"
@@ -70,23 +70,14 @@ def get_current_user(db: Session = Depends(get_db), payload: dict = Depends(get_
     return user_db
 
 
-def get_current_user_menu(user_db: Depends(get_current_user)) -> list[Menu]:
-    """获取当前用户的菜单"""
-
-    menus = set()
-    roles = user_db.roles
-    for role in roles:
-        for menu in role.menus:
-            menus.add(menu)
-    return list(menus)
+def route_function_name(request: Request):
+    return request.scope['endpoint'].__name__
 
 
-# class RequirePermissions:
-#     def __init__(self, permissions: list[str]):
-#         self.permissions = permissions
-#
-#     def __call__(self, user: User = Depends(get_current_user)) -> Never | None:
-#         user_perms = get_user_permissions(user)
-#
-#         for perm in user_perms:
-#             pass
+def check_permission(
+        func_name: str = Depends(route_function_name),
+        user_db: User = Depends(current_user)
+):
+    perm_rules = [perm.perm_rule for perm in get_user_permissions(user_db)]
+    if func_name not in perm_rules:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="没有相应的权限")
