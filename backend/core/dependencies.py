@@ -34,14 +34,3 @@ def current_user(sess: Session = Depends(session_db), payload: dict = Depends(to
 
     user_id = payload.get("user_id")
     return get_user_by_id(sess, user_id)
-
-
-# class RequirePermissions:
-#     def __init__(self, permissions: list[str]):
-#         self.permissions = permissions
-#
-#     def __call__(self, user: User = Depends(get_current_user)) -> Never | None:
-#         user_perms = get_user_permissions(user)
-#
-#         for perm in user_perms:
-#             pass
