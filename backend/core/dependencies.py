@@ -1,6 +1,5 @@
-from fastapi import Depends, status, Request
+from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi.exceptions import HTTPException
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from backend.core.config import settings
