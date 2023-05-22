@@ -6,9 +6,9 @@ from sqlalchemy.orm import Session
 from backend.core.config import settings
 from backend.db.base import SessionDB
 from backend.db.crud.users import get_user_by_username
-from backend.db.models.users import User, Menu
+from backend.db.models.users import User
 
-oauth2_scheme = OAuth2PasswordBearer('token')
+oauth2_scheme = OAuth2PasswordBearer('/api/v1/token')
 
 
 def get_db():
@@ -46,18 +46,6 @@ def get_current_user(db: Session = Depends(get_db), payload: dict = Depends(get_
         raise get_current_user_error
 
     return user_db
-
-
-def get_current_user_menu(user_db: Depends(get_current_user)) -> list[Menu]:
-    """获取当前用户的菜单"""
-
-    menus = set()
-    roles = user_db.roles
-    for role in roles:
-        for menu in role.menus:
-            menus.add(menu)
-    return list(menus)
-
 
 # class RequirePermissions:
 #     def __init__(self, permissions: list[str]):
