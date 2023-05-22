@@ -43,6 +43,9 @@ class Role(Base):
     users: Mapped[list[User]] = relationship(secondary=user_role_relationship, back_populates="roles")
     perms: Mapped[list[Permission]] = relationship(secondary=role_perm_relationship, back_populates="roles")
 
+    def __repr__(self) -> str:
+        return f"Role(role_name ={self.role_name!r})"
+
 
 class Permission(Base):
     __tablename__ = "permission"
@@ -51,3 +54,6 @@ class Permission(Base):
     perm_name: Mapped[str]  # 展示给前端的权限，如：删除用户，添加用户等
     perm_rule: Mapped[str]  # 实际的权限规则
     roles: Mapped[list[Role]] = relationship(secondary=role_perm_relationship, back_populates="perms")
+
+    def __repr__(self) -> str:
+        return f"Permission(perm_name ={self.perm_name!r}, perm_rule={self.perm_rule!r})"

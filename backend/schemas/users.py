@@ -5,12 +5,12 @@ PASS_PAT = r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?\d)(?=.*?[!@#$%^&*._-]).{8,}$"
 
 
 class RegisterIn(BaseModel):
-    username: constr(min_length=6, max_length=20) = Field(..., title="用户名",
+    username: constr(min_length=6, max_length=20) = Field(title="用户名",
                                                           description="用户名不能少于6个字符，不能超过20个字符")
     # 密码必须大于8个字符，包含大小写字母，数字以及特殊字符
-    password1: constr(regex=PASS_PAT) = Field(..., title="密码",
+    password1: constr(regex=PASS_PAT) = Field(title="密码",
                                               description="密码必须大于8个字符，且包含大小写字母、数字以及特殊字符")
-    password2: str = Field(..., title="重复密码")
+    password2: str = Field(title="重复密码")
 
     @validator("password2")
     def match_password(cls, v, values):
@@ -32,6 +32,13 @@ class UserOut(BaseModel):
 
 class RegisterOut(ResponseBase):
     data: UserOut
+
+
+class LoginIn(BaseModel):
+    uuid: str = Field(title="UUID")
+    captcha: str = Field(title="验证码")
+    username: str = Field(title="用户名")
+    password: str = Field(title="密码")
 
 # class PassUpdateSche(BaseModel):
 #     old_password: str = Field(..., title="旧密码")

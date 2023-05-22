@@ -3,18 +3,26 @@ from sqlalchemy import select
 from backend.db.models.users import User, Permission
 
 
-def create_user(db: Session, username: str, password: str) -> User:
+def create_user(sess: Session, username: str, password: str) -> User:
+    """创建用户"""
+
     user = User(username=username, password=password)
-    db.add(user)
-    db.commit()
+    sess.add(user)
+    sess.commit()
     return user
 
 
-def get_user_by_username(db: Session, username: str) -> User:
+def get_user_by_id(sess: Session, user_id: int) -> User | None:
+    """根据用户id获取用户"""
+
+    return sess.get(User, user_id)
+
+
+def get_user_by_username(sess: Session, username: str) -> User | None:
     """根据用户名获取用户"""
 
     stmt = select(User).filter_by(username=username)
-    user = db.scalar(stmt)
+    user = sess.execute(stmt).scalar_one()
     return user
 
 

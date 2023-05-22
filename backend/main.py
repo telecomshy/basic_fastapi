@@ -42,7 +42,6 @@ async def service_exception_handler(request: Request, exc: ServiceException):
         status_code=200,
         content={
             "success": False,
-            "data": "",
             "code": exc.code,
             "message": exc.message,
             "detail": exc.detail
@@ -57,7 +56,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=200,
         content={
             "success": False,
-            "data": "",
             "code": "ERR_001",
             "message": "数据验证错误",
             "detail": exc.errors(),

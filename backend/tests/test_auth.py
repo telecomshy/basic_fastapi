@@ -1,17 +1,17 @@
 from backend.db.crud.users import get_user_by_username
 from backend.main import app
-from backend.core.dependencies import get_current_user, get_db
+from backend.core.dependencies import current_user, session_db
 from fastapi import Depends
 from sqlalchemy.orm import Session
 from backend.db.models.users import User
 
 
-def override_get_current_user(db: Session = Depends(get_db)) -> User:
+def override_get_current_user(db: Session = Depends(session_db)) -> User:
     user = get_user_by_username(db, 'test_user1')
     return user
 
 
-app.dependency_overrides[get_current_user] = override_get_current_user
+app.dependency_overrides[current_user] = override_get_current_user
 
 
 def test_register(client, inited_db):

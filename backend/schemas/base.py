@@ -1,5 +1,5 @@
 from pydantic import BaseModel as PydanticBaseModel
-from typing import Any
+from pydantic import Field
 
 
 class BaseModel(PydanticBaseModel):
@@ -10,9 +10,4 @@ class BaseModel(PydanticBaseModel):
 
 
 class ResponseBase(BaseModel):
-    success: bool = True
-    code: str = ""
-    message: str = ""
-    detail: str = ""
-    data: Any
-
+    success: bool = Field(default=True, title="成功标识")
