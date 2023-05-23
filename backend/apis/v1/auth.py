@@ -105,9 +105,9 @@ def get_captcha_image(uuid: UUID):
 #     return {"access_token": access_token}
 
 
-@router.get("/user", response_model=UserOut)
-def get_user(user=Depends(current_user)):
-    return user
+@router.get("/user")
+def get_user():
+    return {"success": False, "code": "ERR_123", "message": "error 123", "result": "user123"}
 
 # @router.post("/update-pass", summary="修改密码", response_model=UserInfoSche)
 # def update_password(pass_update_sche: PassUpdateSche, db: Session = Depends(get_db),
