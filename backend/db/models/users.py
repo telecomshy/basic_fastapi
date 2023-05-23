@@ -20,14 +20,6 @@ role_perm_relationship = Table(
     Column("perm_id", ForeignKey("permission.id"), primary_key=True),
 )
 
-role_menu_relationship = Table(
-    "role_menu_relationship",
-    Base.metadata,
-    # 同时设置为primary_key会成为联合主键
-    Column("role_id", ForeignKey("role.id"), primary_key=True),
-    Column("menu_id", ForeignKey("menu.id"), primary_key=True),
-)
-
 
 class User(Base):
     __tablename__ = "user"
@@ -50,7 +42,9 @@ class Role(Base):
     role_name: Mapped[str]
     users: Mapped[list[User]] = relationship(secondary=user_role_relationship, back_populates="roles")
     perms: Mapped[list[Permission]] = relationship(secondary=role_perm_relationship, back_populates="roles")
-    menus: Mapped[list[Menu]] = relationship(secondary=role_menu_relationship, back_populates="roles")
+
+    def __repr__(self) -> str:
+        return f"Role(role_name ={self.role_name!r})"
 
 
 class Permission(Base):
@@ -61,11 +55,5 @@ class Permission(Base):
     perm_rule: Mapped[str]  # 实际的权限规则
     roles: Mapped[list[Role]] = relationship(secondary=role_perm_relationship, back_populates="perms")
 
-
-class Menu(Base):
-    __tablename__ = "menu"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    menu_name: Mapped[str]
-    menu_url: Mapped[str]
-    roles: Mapped[list[Role]] = relationship(secondary=role_menu_relationship, back_populates="menus")
+    def __repr__(self) -> str:
+        return f"Permission(perm_name ={self.perm_name!r}, perm_rule={self.perm_rule!r})"
