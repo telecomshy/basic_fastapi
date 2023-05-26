@@ -1,11 +1,11 @@
 from pydantic import Field, constr, EmailStr, validator
-from backend.schemas.base import RequestBaseModel, ResponseBaseModel
-from backend.schemas.user import UserOut
+from backend.schemas.base import BaseModel, ResponseBaseModel
+from backend.schemas.user import UserCommon
 
 PASS_PAT = r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?\d)(?=.*?[!@#$%^&*._-]).{8,}$"
 
 
-class RegisterIn(RequestBaseModel):
+class RegisterIn(BaseModel):
     username: constr(min_length=6, max_length=20) = Field(title="用户名",
                                                           description="用户名不能少于6个字符，不能超过20个字符")
     # 密码必须大于8个字符，包含大小写字母，数字以及特殊字符
@@ -22,10 +22,10 @@ class RegisterIn(RequestBaseModel):
 
 
 class RegisterOut(ResponseBaseModel):
-    data: UserOut
+    data: UserCommon
 
 
-class LoginIn(RequestBaseModel):
+class LoginIn(BaseModel):
     uuid: str = Field(title="UUID")
     captcha: str = Field(title="验证码")
     username: str = Field(title="用户名")
