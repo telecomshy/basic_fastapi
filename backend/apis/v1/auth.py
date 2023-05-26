@@ -6,9 +6,9 @@ from captcha.image import ImageCaptcha
 from string import digits, ascii_letters
 from uuid import UUID
 from jose import jwt
-from backend.schemas.users import RegisterIn, RegisterOut, UserOut, LoginIn
+from backend.schemas.users import RegisterIn, RegisterOut, LoginIn, LoginOut
 from backend.db.crud.users import get_user_by_username, create_user
-from backend.core.dependencies import session_db, current_user
+from backend.core.dependencies import session_db
 from backend.core.utils import verify_password, get_password_hash
 from backend.core.config import settings
 from backend.core.exceptions import ServiceException
@@ -32,7 +32,7 @@ def register(register_data: RegisterIn, sess: Session = Depends(session_db)):
     return {"data": user_db}
 
 
-@router.post("/login", summary="用户登陆")
+@router.post("/login", summary="用户登陆", response_model=LoginOut)
 def login_for_token(login_data: LoginIn, sess: Session = Depends(session_db)):
     """用于普通客户端用户登陆，并添加验证码"""
 
@@ -52,7 +52,7 @@ def login_for_token(login_data: LoginIn, sess: Session = Depends(session_db)):
     payload = {"user_id": user_db.id, "exp": access_token_expires}
     access_token = jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
-    return access_token
+    return {"data": access_token}
 
 
 @router.get("/captcha", summary="获取验证码", response_class=Response)

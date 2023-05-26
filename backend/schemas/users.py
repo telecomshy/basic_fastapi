@@ -40,6 +40,11 @@ class LoginIn(BaseModel):
     username: str = Field(title="用户名")
     password: str = Field(title="密码")
 
+
+class LoginOut(ResponseBase):
+    data: str = Field(title="TOKEN")
+
+
 # class PassUpdateSche(BaseModel):
 #     old_password: str = Field(..., title="旧密码")
 #     new_password1: constr(regex=PASS_PAT) = Field(..., title="新密码",
