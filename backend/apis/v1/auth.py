@@ -48,17 +48,18 @@ def login_for_token(login_data: LoginIn, sess: Session = Depends(session_db)):
         raise ServiceException(code="ERR_005", message="验证码错误")
 
     # 创建token，过期时间添加到payload会自动生效，键值只能为exp
-    access_token_expires = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
-    payload = {"user_id": user_db.id, "exp": access_token_expires}
-    access_token = jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+    token_expires = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
+    payload = {"user_id": user_db.id, "exp": token_expires}
+    token = jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
-    return access_token
+    return token
 
 
 @router.get("/captcha", summary="获取验证码", response_class=Response)
 def get_captcha_image(uuid: UUID):
     """获取验证码"""
 
+    # TODO 返回不符合规则
     captcha_text = ''.join(random.choices(ascii_letters + digits, k=4))
     captcha_text = captcha_text.lower()
     image = ImageCaptcha(height=38, width=100, font_sizes=(27, 29, 31))
