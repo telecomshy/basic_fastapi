@@ -6,7 +6,7 @@ from captcha.image import ImageCaptcha
 from string import digits, ascii_letters
 from uuid import UUID
 from jose import jwt
-from backend.schemas.users import RegisterIn, RegisterOut, LoginIn, LoginOut
+from backend.schemas.auth import RegisterIn, RegisterOut, LoginIn, LoginOut
 from backend.db.crud.users import get_user_by_username, create_user
 from backend.core.dependencies import session_db
 from backend.core.utils import verify_password, get_password_hash
@@ -104,10 +104,6 @@ def get_captcha_image(uuid: UUID):
 #     # 返回json对象给前端，除了token，还包含前端需要的其它信息
 #     return {"access_token": access_token}
 
-
-@router.get("/user")
-def get_user():
-    return {"success": False, "code": "ERR_123", "message": "error 123", "result": "user123"}
 
 # @router.post("/update-pass", summary="修改密码", response_model=UserInfoSche)
 # def update_password(pass_update_sche: PassUpdateSche, db: Session = Depends(get_db),

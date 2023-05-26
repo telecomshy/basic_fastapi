@@ -1,13 +1,13 @@
-from pydantic import BaseModel as PydanticBaseModel
+from pydantic import BaseModel
 from pydantic import Field
 
 
-class BaseModel(PydanticBaseModel):
+class RequestBaseModel(BaseModel):
     """
     自定义BaseModel，方便全局修改模型配置
     """
     pass
 
 
-class ResponseBase(BaseModel):
+class ResponseBaseModel(BaseModel):
     success: bool = Field(default=True, title="成功标识")
