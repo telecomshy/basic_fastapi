@@ -6,7 +6,7 @@ from captcha.image import ImageCaptcha
 from string import digits, ascii_letters
 from uuid import UUID
 from jose import jwt
-from backend.schemas.auth import RegisterIn, RegisterOut, LoginIn, LoginOut
+from backend.schemas.security import RegisterIn, RegisterOut, LoginIn, LoginOut
 from backend.db.crud.users import get_user_by_username, create_user
 from backend.core.dependencies import session_db
 from backend.core.utils import verify_password, get_password_hash
