@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from backend.db.models.users import User, Permission
+from backend.db.models.user import User, Permission
 
 
 def create_user(sess: Session, username: str, password: str) -> User:

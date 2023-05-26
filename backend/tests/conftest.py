@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from uuid import uuid4
 from ..main import app
-from backend.db.models.users import User
+from backend.db.models.user import User
 from backend.apis.v1.auth import get_password_hash, uuid_captcha_mapping
 from backend.db.base import SessionDB
 

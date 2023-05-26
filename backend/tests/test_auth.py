@@ -3,7 +3,7 @@ from backend.main import app
 from backend.core.dependencies import current_user, session_db
 from fastapi import Depends
 from sqlalchemy.orm import Session
-from backend.db.models.users import User
+from backend.db.models.user import User
 
 
 def override_get_current_user(db: Session = Depends(session_db)) -> User:

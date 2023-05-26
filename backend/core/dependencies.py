@@ -6,7 +6,7 @@ from backend.core.config import settings
 from backend.core.exceptions import ServiceException
 from backend.db.base import SessionDB
 from backend.db.crud.users import get_user_by_id
-from backend.db.models.users import User
+from backend.db.models.user import User
 
 oauth2_scheme = OAuth2PasswordBearer('/api/v1/token')
 
