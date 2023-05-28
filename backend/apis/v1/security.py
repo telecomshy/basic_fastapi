@@ -44,6 +44,7 @@ def login_for_token(login_data: LoginIn, sess: Session = Depends(session_db)):
     if not verify_password(login_data.password, user_db.password):
         raise ServiceException(code="ERR_004", message="密码不正确")
 
+    print(login_data.uuid, login_data.captcha)
     if login_data.captcha.lower() != uuid_captcha_mapping.get(login_data.uuid):
         raise ServiceException(code="ERR_005", message="验证码错误")
 
@@ -65,6 +66,7 @@ def get_captcha_image(uuid: UUID):
     captcha_image = image.generate(captcha_text).getvalue()
     # 保存uuid和验证码的对应关系，登录的时候比较客户端输入的验证码与生成的验证码是否一致
     uuid_captcha_mapping.update({str(uuid): captcha_text})
+    print(uuid_captcha_mapping)
     return Response(captcha_image, media_type="image/png")
 
 
