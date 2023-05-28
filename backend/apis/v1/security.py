@@ -6,9 +6,9 @@ from captcha.image import ImageCaptcha
 from string import digits, ascii_letters
 from uuid import UUID
 from jose import jwt
-from backend.schemas.security import RegisterIn, RegisterOut, LoginIn, LoginOut
-from backend.db.crud.users import get_user_by_username, create_user
-from backend.core.dependencies import session_db
+from backend.schemas.security import RegisterIn, RegisterOut, LoginIn, LoginOut, ScopesOut
+from backend.db.crud.user import get_user_by_username, create_user, get_user_permission_scopes
+from backend.core.dependencies import session_db, current_user
 from backend.core.utils import verify_password, get_password_hash
 from backend.core.config import settings
 from backend.core.exceptions import ServiceException
@@ -66,6 +66,14 @@ def get_captcha_image(uuid: UUID):
     # 保存uuid和验证码的对应关系，登录的时候比较客户端输入的验证码与生成的验证码是否一致
     uuid_captcha_mapping.update({str(uuid): captcha_text})
     return Response(captcha_image, media_type="image/png")
+
+
+@router.get("/scopes", summary="获取权限域", response_model=ScopesOut)
+def get_user_perm_scopes(user=Depends(current_user)):
+    """获取用户权限域"""
+
+    scopes = get_user_permission_scopes(user)
+    return {"data": scopes}
 
 
 # LoginResponse = TypeVar("LoginResponse", bound=dict)

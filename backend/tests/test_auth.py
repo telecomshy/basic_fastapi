@@ -1,4 +1,4 @@
-from backend.db.crud.users import get_user_by_username
+from backend.db.crud.user import get_user_by_username
 from backend.main import app
 from backend.core.dependencies import current_user, session_db
 from fastapi import Depends
