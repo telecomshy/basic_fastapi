@@ -1,5 +1,6 @@
 from pydantic import Field, constr, EmailStr, validator
-from backend.schemas.base import BaseModel, ResponseBase
+from backend.schemas.base import BaseModel, ResponseBaseModel
+from backend.schemas.user import UserCommon
 
 PASS_PAT = r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?\d)(?=.*?[!@#$%^&*._-]).{8,}$"
 
@@ -20,18 +21,8 @@ class RegisterIn(BaseModel):
         return v
 
 
-class UserOut(BaseModel):
-    id: int = Field(title="用户ID")
-    username: str = Field(title="用户名")
-    email: str | None = Field(title="邮箱")
-    phone_number: str | None = Field(title="手机号码")
-
-    class Config:
-        orm_mode = True
-
-
-class RegisterOut(ResponseBase):
-    data: UserOut
+class RegisterOut(ResponseBaseModel):
+    data: UserCommon
 
 
 class LoginIn(BaseModel):
@@ -39,6 +30,15 @@ class LoginIn(BaseModel):
     captcha: str = Field(title="验证码")
     username: str = Field(title="用户名")
     password: str = Field(title="密码")
+
+
+class LoginOut(ResponseBaseModel):
+    data: str = Field(title="TOKEN")
+
+
+class ScopesOut(ResponseBaseModel):
+    data: list[str] = Field(title="权限域")
+
 
 # class PassUpdateSche(BaseModel):
 #     old_password: str = Field(..., title="旧密码")

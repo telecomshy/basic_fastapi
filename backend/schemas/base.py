@@ -9,5 +9,5 @@ class BaseModel(PydanticBaseModel):
     pass
 
 
-class ResponseBase(BaseModel):
+class ResponseBaseModel(PydanticBaseModel):
     success: bool = Field(default=True, title="成功标识")

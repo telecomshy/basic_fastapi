@@ -21,7 +21,7 @@ if config.config_file_name is not None:
 
 from backend.db.base import Base
 # Base和模型类如果不在一个模块中，模型类均需要导入，否则无法识别具体要创建哪些类
-from backend.db.models.users import User
+from backend.db.models.user import User
 
 target_metadata = Base.metadata
 

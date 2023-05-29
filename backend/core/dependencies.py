@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from backend.core.config import settings
 from backend.core.exceptions import ServiceException
 from backend.db.base import SessionDB
-from backend.db.crud.users import get_user_by_id
-from backend.db.models.users import User
+from backend.db.crud.user import get_user_by_id
+from backend.db.models.user import User
 
 oauth2_scheme = OAuth2PasswordBearer('/api/v1/token')
 
@@ -22,6 +22,7 @@ def session_db():
 def token_payload(request: Request) -> dict:
     try:
         token = request.headers["Authorization"]
+        print(token)
         # 如果token解码失败，或者token过期，都会抛出错误，分别会抛出JWTClaimsError和ExpiredSignatureError错误
         return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
     except JWTError:
