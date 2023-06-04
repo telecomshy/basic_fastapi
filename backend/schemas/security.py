@@ -33,11 +33,16 @@ class LoginIn(BaseModel):
 
 
 class LoginOut(ResponseBaseModel):
-    data: str = Field(title="TOKEN")
+    class Data(BaseModel):
+        username: str = Field(title="用户名")
+        scopes: list[str] = Field(title="权限域")
+        token: str = Field(title="TOKEN")
+
+    data: Data
 
 
-class ScopesOut(ResponseBaseModel):
-    data: list[str] = Field(title="权限域")
+# class ScopesOut(ResponseBaseModel):
+#     data: list[str] = Field(title="权限域")
 
 
 # class PassUpdateSche(BaseModel):

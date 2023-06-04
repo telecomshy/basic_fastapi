@@ -6,7 +6,7 @@ from captcha.image import ImageCaptcha
 from string import digits, ascii_letters
 from uuid import UUID
 from jose import jwt
-from backend.schemas.security import RegisterIn, RegisterOut, LoginIn, LoginOut, ScopesOut
+from backend.schemas.security import RegisterIn, RegisterOut, LoginIn, LoginOut
 from backend.db.crud.user import get_user_by_username, create_user, get_user_permission_scopes
 from backend.core.dependencies import session_db, current_user
 from backend.core.utils import verify_password, get_password_hash
@@ -33,7 +33,7 @@ def register(register_data: RegisterIn, sess: Session = Depends(session_db)):
 
 
 @router.post("/login", summary="用户登陆", response_model=LoginOut)
-def login_for_token(login_data: LoginIn, sess: Session = Depends(session_db)):
+def login(login_data: LoginIn, sess: Session = Depends(session_db)):
     """用于普通客户端用户登陆，并添加验证码"""
 
     user_db = get_user_by_username(sess, login_data.username)
@@ -44,7 +44,6 @@ def login_for_token(login_data: LoginIn, sess: Session = Depends(session_db)):
     if not verify_password(login_data.password, user_db.password):
         raise ServiceException(code="ERR_004", message="密码不正确")
 
-    print(login_data.uuid, login_data.captcha)
     if login_data.captcha.lower() != uuid_captcha_mapping.get(login_data.uuid):
         raise ServiceException(code="ERR_005", message="验证码错误")
 
@@ -52,8 +51,10 @@ def login_for_token(login_data: LoginIn, sess: Session = Depends(session_db)):
     access_token_expires = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
     payload = {"user_id": user_db.id, "exp": access_token_expires}
     access_token = jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+    # 获取用户权限域
+    scopes = get_user_permission_scopes(user_db)
 
-    return {"data": access_token}
+    return {"data": {"token": access_token, "username": user_db.username, "scopes": scopes}}
 
 
 @router.get("/captcha", summary="获取验证码", response_class=Response)
@@ -66,17 +67,15 @@ def get_captcha_image(uuid: UUID):
     captcha_image = image.generate(captcha_text).getvalue()
     # 保存uuid和验证码的对应关系，登录的时候比较客户端输入的验证码与生成的验证码是否一致
     uuid_captcha_mapping.update({str(uuid): captcha_text})
-    print(uuid_captcha_mapping)
     return Response(captcha_image, media_type="image/png")
 
 
-@router.get("/scopes", summary="获取权限域", response_model=ScopesOut)
-def get_user_perm_scopes(user=Depends(current_user)):
-    """获取用户权限域"""
-
-    scopes = get_user_permission_scopes(user)
-    return {"data": scopes}
-
+# @router.get("/scopes", summary="获取权限域", response_model=ScopesOut)
+# def get_user_perm_scopes(user=Depends(current_user)):
+#     """获取用户权限域"""
+#
+#     scopes = get_user_permission_scopes(user)
+#     return {"data": scopes}
 
 # LoginResponse = TypeVar("LoginResponse", bound=dict)
 
