@@ -8,7 +8,7 @@ from backend.db.base import SessionDB
 
 
 @pytest.fixture(scope="session")
-def client() -> TestClient:
+def fastapi_client() -> TestClient:
     return TestClient(app)
 
 
@@ -26,11 +26,27 @@ def inited_db():
 
 
 @pytest.fixture()
-def uuid_and_captcha(client):
+def uuid_and_captcha(fastapi_client):
     """
     创建登陆时需要的uuid和captcha
     """
     uuid = str(uuid4())
-    client.get(f"/api/v1/captcha?uuid={uuid}")
+    fastapi_client.get(f"/api/v1/captcha?uuid={uuid}")
     captcha = uuid_captcha_mapping[uuid]
     return uuid, captcha
+
+
+@pytest.fixture()
+def client(fastapi_client):
+    def _request(url, **kwargs):
+        if kwargs.get("json"):
+            method = getattr(fastapi_client, 'post')
+        else:
+            method = getattr(fastapi_client, 'get')
+
+        result = method(url, **kwargs).json()
+        if result["success"]:
+            return result["data"]
+        return result["code"], result["message"]
+
+    return _request

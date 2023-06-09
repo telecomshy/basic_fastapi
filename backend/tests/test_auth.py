@@ -24,8 +24,7 @@ def test_register(client, inited_db):
     }
 
     try:
-        result = client.post("/api/v1/register", json=request_data).json()
-        data = result["data"]
+        data = client("/api/v1/register", json=request_data)
         assert "id" in data
         assert data["username"] == "test_user2"
         assert data["phone_number"] is None
@@ -45,9 +44,9 @@ def test_register_with_error_username(client):
         "password1": "Test_user1",
         "password2": "Test_user1"
     }
-    result = client.post("/api/v1/register", json=request_data).json()
-    assert result["success"] is False
-    assert result["code"] == "ERR_002"
+    err_code, message = client("/api/v1/register", json=request_data)
+    assert err_code == "ERR_002"
+    assert message == "用户已存在"
 
 
 def test_register_with_error_password(client):
@@ -58,8 +57,9 @@ def test_register_with_error_password(client):
         "password1": "test123",
         "password2": "test123"
     }
-    result = client.post("/api/v1/register", json=request_data).json()
-    assert result["code"] == "ERR_001"
+    err_code, message = client("/api/v1/register", json=request_data)
+    assert err_code == "ERR_001"
+    assert message == "数据验证错误"
 
 
 def test_login(client, uuid_and_captcha):
@@ -73,8 +73,7 @@ def test_login(client, uuid_and_captcha):
         "captcha": captcha
     }
 
-    result = client.post("/api/v1/login", json=request_data).json()
-    data = result["data"]
+    data = client("/api/v1/login", json=request_data)
     assert "token" in data
     assert data["username"] == "test_user1"
 
@@ -89,9 +88,9 @@ def test_login_with_error_username(client, uuid_and_captcha):
         "uuid": uuid,
         "captcha": captcha
     }
-    result = client.post("/api/v1/login", json=request_data).json()
-    assert result["code"] == "ERR_003"
-    assert result["message"] == "用户名不存在"
+    code, message = client("/api/v1/login", json=request_data)
+    assert code == "ERR_003"
+    assert message == "用户名不存在"
 
 
 def test_login_with_error_password(client, uuid_and_captcha):
@@ -104,9 +103,9 @@ def test_login_with_error_password(client, uuid_and_captcha):
         "uuid": uuid,
         "captcha": captcha
     }
-    result = client.post("/api/v1/login", json=request_data).json()
-    assert result["code"] == "ERR_004"
-    assert result["message"] == "密码不正确"
+    code, message = client("/api/v1/login", json=request_data)
+    assert code == "ERR_004"
+    assert message == "密码不正确"
 
 
 def test_login_with_error_captcha(client, uuid_and_captcha):
@@ -120,6 +119,6 @@ def test_login_with_error_captcha(client, uuid_and_captcha):
         "uuid": uuid,
         "captcha": captcha
     }
-    result = client.post("/api/v1/login", json=request_data).json()
-    assert result["code"] == "ERR_005"
-    assert result["message"] == "验证码错误"
+    code, message = client("/api/v1/login", json=request_data)
+    assert code == "ERR_005"
+    assert message == "验证码错误"

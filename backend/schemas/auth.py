@@ -44,10 +44,6 @@ class LoginOut(BaseModel):
     data: Data
 
 
-# class ScopesOut(ResponseBaseModel):
-#     data: list[str] = Field(title="权限域")
-
-
 # class PassUpdateSche(BaseModel):
 #     old_password: str = Field(..., title="旧密码")
 #     new_password1: constr(regex=PASS_PAT) = Field(..., title="新密码",
