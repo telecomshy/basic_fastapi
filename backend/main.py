@@ -62,6 +62,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         }
     )
 
+
 # @app.exception_handler(RequestValidationError)
 # async def validation_exception_handler(request: Request, exc: RequestValidationError):
 #     raw_errors = exc.raw_errors

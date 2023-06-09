@@ -1,5 +1,5 @@
 from pydantic import Field, constr, EmailStr, validator
-from backend.schemas.base import BaseModel, ResponseBaseModel
+from backend.schemas.base import BaseModel
 
 
 class UserCommon(BaseModel):

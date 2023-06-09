@@ -22,16 +22,19 @@ def test_register(client, inited_db):
         "password1": "Test_user2",
         "password2": "Test_user2"
     }
-    response = client.post("/register", json=request_data)
-    assert response.status_code == 200
-    data = response.json()
-    assert "id" in data
-    assert data["username"] == "test_user2"
-    assert data["phone_number"] is None
-    # 删除创建的用户
-    test_user2 = get_user_by_username(inited_db, "test_user2")
-    inited_db.delete(test_user2)
-    inited_db.commit()
+
+    try:
+        result = client.post("/api/v1/register", json=request_data).json()
+        data = result["data"]
+        assert "id" in data
+        assert data["username"] == "test_user2"
+        assert data["phone_number"] is None
+    finally:
+        # 删除创建的用户
+        test_user2 = get_user_by_username(inited_db, "test_user2")
+        if test_user2:
+            inited_db.delete(test_user2)
+            inited_db.commit()
 
 
 def test_register_with_error_username(client):
@@ -42,8 +45,9 @@ def test_register_with_error_username(client):
         "password1": "Test_user1",
         "password2": "Test_user1"
     }
-    response = client.post("/register", json=request_data)
-    assert response.status_code == 409
+    result = client.post("/api/v1/register", json=request_data).json()
+    assert result["success"] is False
+    assert result["code"] == "ERR_002"
 
 
 def test_register_with_error_password(client):
@@ -54,10 +58,8 @@ def test_register_with_error_password(client):
         "password1": "test123",
         "password2": "test123"
     }
-    response = client.post("/register", json=request_data)
-    assert response.status_code == 422
-    error_type = response.json()['detail'][0]['type']
-    assert error_type == 'value_error.str.regex'
+    result = client.post("/api/v1/register", json=request_data).json()
+    assert result["code"] == "ERR_001"
 
 
 def test_login(client, uuid_and_captcha):
@@ -70,10 +72,10 @@ def test_login(client, uuid_and_captcha):
         "uuid": uuid,
         "captcha": captcha
     }
-    response = client.post("login", data=request_data)
-    assert response.status_code == 200
-    data = response.json()
-    assert "access_token" in data
+
+    result = client.post("/api/v1/login", json=request_data).json()
+    data = result["data"]
+    assert "token" in data
     assert data["username"] == "test_user1"
 
 
@@ -87,10 +89,9 @@ def test_login_with_error_username(client, uuid_and_captcha):
         "uuid": uuid,
         "captcha": captcha
     }
-    response = client.post("login", data=request_data)
-    assert response.status_code == 401
-    data = response.json()
-    assert "用户名或密码错误" == data["detail"]
+    result = client.post("/api/v1/login", json=request_data).json()
+    assert result["code"] == "ERR_003"
+    assert result["message"] == "用户名不存在"
 
 
 def test_login_with_error_password(client, uuid_and_captcha):
@@ -103,10 +104,9 @@ def test_login_with_error_password(client, uuid_and_captcha):
         "uuid": uuid,
         "captcha": captcha
     }
-    response = client.post("login", data=request_data)
-    assert response.status_code == 401
-    data = response.json()
-    assert "用户名或密码错误" == data["detail"]
+    result = client.post("/api/v1/login", json=request_data).json()
+    assert result["code"] == "ERR_004"
+    assert result["message"] == "密码不正确"
 
 
 def test_login_with_error_captcha(client, uuid_and_captcha):
@@ -120,46 +120,6 @@ def test_login_with_error_captcha(client, uuid_and_captcha):
         "uuid": uuid,
         "captcha": captcha
     }
-    response = client.post("login", data=request_data)
-    assert response.status_code == 401
-    data = response.json()
-    assert "验证码错误" == data["detail"]
-
-
-def test_update_user_password(client):
-    request_data = {
-        "old_password": "Test_user1",
-        "new_password1": "Test_user1_temp",
-        "new_password2": "Test_user1_temp"
-    }
-
-    response = client.post("update-pass", json=request_data)
-    assert response.status_code == 200
-    user = response.json()
-    assert user["username"] == "test_user1"
-
-
-def test_update_user_password_with_error_old_password(client):
-    request_data = {
-        "old_password": "Test_user1_wrong_password",
-        "new_password1": "Test_user1_temp",
-        "new_password2": "Test_user1_temp"
-    }
-
-    response = client.post("update-pass", json=request_data)
-    assert response.status_code == 401
-    data = response.json()
-    assert data["detail"] == "原始密码错误"
-
-
-def test_update_user_password_with_mismatching_new_password(client):
-    request_data = {
-        "old_password": "Test_user1",
-        "new_password1": "Test_user1_temp1",
-        "new_password2": "Test_user1_temp2"
-    }
-
-    response = client.post("update-pass", json=request_data)
-    assert response.status_code == 422
-    data = response.json()
-    assert data["detail"][0]["msg"] == "两次输入的新密码不一致"
+    result = client.post("/api/v1/login", json=request_data).json()
+    assert result["code"] == "ERR_005"
+    assert result["message"] == "验证码错误"

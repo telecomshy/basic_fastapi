@@ -6,9 +6,9 @@ from captcha.image import ImageCaptcha
 from string import digits, ascii_letters
 from uuid import UUID
 from jose import jwt
-from backend.schemas.security import RegisterIn, RegisterOut, LoginIn, LoginOut
+from backend.schemas.auth import RegisterIn, RegisterOut, LoginIn, LoginOut
 from backend.db.crud.user import get_user_by_username, create_user, get_user_permission_scopes
-from backend.core.dependencies import session_db, current_user
+from backend.core.dependencies import session_db
 from backend.core.utils import verify_password, get_password_hash
 from backend.core.config import settings
 from backend.core.exceptions import ServiceException
@@ -34,7 +34,7 @@ def register(register_data: RegisterIn, sess: Session = Depends(session_db)):
 
 @router.post("/login", summary="用户登陆", response_model=LoginOut)
 def login(login_data: LoginIn, sess: Session = Depends(session_db)):
-    """用于普通客户端用户登陆，并添加验证码"""
+    """用户登陆，并添加验证码"""
 
     user_db = get_user_by_username(sess, login_data.username)
 
@@ -44,7 +44,8 @@ def login(login_data: LoginIn, sess: Session = Depends(session_db)):
     if not verify_password(login_data.password, user_db.password):
         raise ServiceException(code="ERR_004", message="密码不正确")
 
-    if login_data.captcha.lower() != uuid_captcha_mapping.get(login_data.uuid):
+    # 注意，uuid类型是UUID，所以要进行转换
+    if login_data.captcha.lower() != uuid_captcha_mapping.get(str(login_data.uuid)):
         raise ServiceException(code="ERR_005", message="验证码错误")
 
     # 创建token，过期时间添加到payload会自动生效，键值只能为exp
@@ -68,30 +69,6 @@ def get_captcha_image(uuid: UUID):
     # 保存uuid和验证码的对应关系，登录的时候比较客户端输入的验证码与生成的验证码是否一致
     uuid_captcha_mapping.update({str(uuid): captcha_text})
     return Response(captcha_image, media_type="image/png")
-
-
-# @router.get("/scopes", summary="获取权限域", response_model=ScopesOut)
-# def get_user_perm_scopes(user=Depends(current_user)):
-#     """获取用户权限域"""
-#
-#     scopes = get_user_permission_scopes(user)
-#     return {"data": scopes}
-
-# LoginResponse = TypeVar("LoginResponse", bound=dict)
-
-# def authenticate_user(db, username, password) -> dict:
-#     """登录认证"""
-#     user_db = get_user_by_username(db, username)
-#
-#     if user_db is None or not verify_password(password, user_db.password):
-#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
-#
-#     access_token_expires = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
-#     # 过期时间添加了会自动生效
-#     payload = {"username": username, "exp": access_token_expires}
-#     access_token = jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
-#     # 返回json对象给前端，除了token，还包含前端需要的其它信息
-#     return {"access_token": access_token, "username": username}
 
 
 # @router.post("/token", summary="仅用于openAPI登录")
@@ -126,15 +103,4 @@ def get_captcha_image(uuid: UUID):
 #     hashed_password = get_password_hash(pass_update_sche.new_password1)
 #     user_db = update_user_password(db=db, user=user_db, hashed_password=hashed_password)
 #     return user_db
-#
-#
-# @router.get("/get-menus", summary="获取当前用户菜单")
-# def get_current_user_menus(user_db: User = Depends(get_current_user)):
-#     """根据用户的角色获取相应的菜单"""
-#
-#     menus = set()
-#     roles = user_db.roles
-#     for role in roles:
-#         for menu in role.menus:
-#             menus.add(menu)
-#     return list(menus)
+

@@ -1,5 +1,6 @@
 from pydantic import Field, constr, EmailStr, validator
-from backend.schemas.base import BaseModel, ResponseBaseModel
+from uuid import UUID
+from backend.schemas.base import BaseModel
 from backend.schemas.user import UserCommon
 
 PASS_PAT = r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?\d)(?=.*?[!@#$%^&*._-]).{8,}$"
@@ -21,23 +22,25 @@ class RegisterIn(BaseModel):
         return v
 
 
-class RegisterOut(ResponseBaseModel):
+class RegisterOut(BaseModel):
+    success: bool = Field(default=True, title="成功标识")
     data: UserCommon
 
 
 class LoginIn(BaseModel):
-    uuid: str = Field(title="UUID")
+    uuid: UUID = Field(title="UUID")
     captcha: str = Field(title="验证码")
     username: str = Field(title="用户名")
     password: str = Field(title="密码")
 
 
-class LoginOut(ResponseBaseModel):
+class LoginOut(BaseModel):
     class Data(BaseModel):
         username: str = Field(title="用户名")
         scopes: list[str] = Field(title="权限域")
         token: str = Field(title="TOKEN")
 
+    success: bool = Field(default=True, title="成功标识")
     data: Data
 
 

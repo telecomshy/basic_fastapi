@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from uuid import uuid4
 from ..main import app
 from backend.db.models.user import User
-from backend.apis.v1.security import get_password_hash, uuid_captcha_mapping
+from backend.apis.v1.auth import get_password_hash, uuid_captcha_mapping
 from backend.db.base import SessionDB
 
 
@@ -31,6 +31,6 @@ def uuid_and_captcha(client):
     创建登陆时需要的uuid和captcha
     """
     uuid = str(uuid4())
-    client.get(f"captcha?uuid={uuid}")
+    client.get(f"/api/v1/captcha?uuid={uuid}")
     captcha = uuid_captcha_mapping[uuid]
     return uuid, captcha
