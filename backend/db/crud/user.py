@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select
 from backend.db.models.user import User, Permission
 
@@ -55,3 +55,11 @@ def get_user_permission_scopes(user: User) -> list[str]:
         scopes.add(scope)
 
     return list(scopes)
+
+
+# TODO 缺少分页
+def get_db_users(db: Session):
+    """分页获取所有用户"""
+
+    stmt = select(User).options(selectinload(User.roles))
+    return db.scalars(stmt).all()

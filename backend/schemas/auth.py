@@ -1,7 +1,6 @@
-from pydantic import Field, constr, EmailStr, validator
+from pydantic import Field, constr, validator
 from uuid import UUID
 from backend.schemas.base import BaseModel
-from backend.schemas.user import UserCommon
 
 PASS_PAT = r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?\d)(?=.*?[!@#$%^&*._-]).{8,}$"
 
@@ -23,8 +22,15 @@ class RegisterIn(BaseModel):
 
 
 class RegisterOut(BaseModel):
-    success: bool = Field(default=True, title="成功标识")
-    data: UserCommon
+    class RegisterUserOut(BaseModel):
+        id: int = Field(title="用户ID")
+        username: str = Field(title="用户名")
+
+        class Config:
+            orm_mode = True
+
+    success: bool = True
+    data: RegisterUserOut
 
 
 class LoginIn(BaseModel):
@@ -40,9 +46,8 @@ class LoginOut(BaseModel):
         scopes: list[str] = Field(title="权限域")
         token: str = Field(title="TOKEN")
 
-    success: bool = Field(default=True, title="成功标识")
+    success: bool = True
     data: Data
-
 
 # class PassUpdateSche(BaseModel):
 #     old_password: str = Field(..., title="旧密码")

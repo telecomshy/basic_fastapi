@@ -1,4 +1,4 @@
-from fastapi import FastAPI, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -62,7 +62,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         }
     )
 
-
 # @app.exception_handler(RequestValidationError)
 # async def validation_exception_handler(request: Request, exc: RequestValidationError):
 #     raw_errors = exc.raw_errors
@@ -78,4 +77,3 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 #             "reason": first_error_msg
 #         }
 #     )
-
