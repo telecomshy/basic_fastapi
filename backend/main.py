@@ -38,6 +38,9 @@ app.include_router(api_router)
 
 @app.exception_handler(ServiceException)
 async def service_exception_handler(request: Request, exc: ServiceException):
+    """
+    自定义告警，所以异常均抛出ServiceException错误，统一后端返回的数据格式
+    """
     return JSONResponse(
         status_code=200,
         content={
@@ -49,9 +52,11 @@ async def service_exception_handler(request: Request, exc: ServiceException):
     )
 
 
-# 覆盖默认的RequestValidationError，统一错误格式
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """
+    覆盖默认的RequestValidationError，统一后端返回的数据格式
+    """
     return JSONResponse(
         status_code=200,
         content={

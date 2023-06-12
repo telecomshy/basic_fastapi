@@ -1,10 +1,11 @@
 import pytest
 from fastapi.testclient import TestClient
 from uuid import uuid4
-from ..main import app
-from backend.db.models.user import User
+from sqlalchemy import select
+from backend.db.models.user import User, Role
 from backend.apis.v1.auth import get_password_hash, uuid_captcha_mapping
 from backend.db.base import SessionDB
+from ..main import app
 
 
 @pytest.fixture(scope="session")
@@ -15,11 +16,19 @@ def fastapi_client() -> TestClient:
 @pytest.fixture(scope="module", autouse=True)
 def inited_db():
     session = SessionDB()
-    password = get_password_hash("Test_user1")
-    user = User(username="test_user1", password=password)
+    # 创建用户
+    user = User(username="test_user1", password=get_password_hash("Test_user1"))
+    # 创建角色
+    for role_name in ["系统管理员", "普通用户"]:
+        role = session.execute(select(Role).filter_by(role_name=role_name)).scalar()
+        if role is None:
+            role = Role(role_name=role_name)
+        user.roles.append(role)
+    # 关联用户和角色
     session.add(user)
     session.commit()
     yield session
+    # 清理临时创建的用户
     session.delete(user)
     session.commit()
     session.close()

@@ -57,9 +57,13 @@ def get_user_permission_scopes(user: User) -> list[str]:
     return list(scopes)
 
 
-# TODO 缺少分页
-def get_db_users(db: Session):
+def get_db_users(db: Session, page: int = None, page_size: int = None):
     """分页获取所有用户"""
 
+    # 使用selectinload策略，避免懒加载，一次性读取和user相关的role信息
     stmt = select(User).options(selectinload(User.roles))
+    if page_size is not None:
+        stmt = stmt.limit(page_size)
+    if page is not None:
+        stmt = stmt.offset(page * page_size)
     return db.scalars(stmt).all()

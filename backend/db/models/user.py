@@ -25,7 +25,7 @@ class User(Base):
     __tablename__ = "user"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(String(30))
+    username: Mapped[str] = mapped_column(String(30), unique=True)
     password: Mapped[str]
     email: Mapped[Optional[str]]
     phone_number: Mapped[Optional[str]]
@@ -39,7 +39,7 @@ class Role(Base):
     __tablename__ = "role"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    role_name: Mapped[str]
+    role_name: Mapped[str] = mapped_column(unique=True)
     users: Mapped[list[User]] = relationship(secondary=user_role_relationship, back_populates="roles")
     perms: Mapped[list[Permission]] = relationship(secondary=role_perm_relationship, back_populates="roles")
 
@@ -51,8 +51,8 @@ class Permission(Base):
     __tablename__ = "permission"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    perm_name: Mapped[str]  # 展示给前端的权限，如：删除用户，添加用户等
-    perm_rule: Mapped[str]  # 实际的权限规则
+    perm_name: Mapped[str] = mapped_column(unique=True) # 展示给前端的权限，如：删除用户，添加用户等
+    perm_rule: Mapped[str] = mapped_column(unique=True) # 实际的权限规则
     roles: Mapped[list[Role]] = relationship(secondary=role_perm_relationship, back_populates="perms")
 
     def __repr__(self) -> str:

@@ -27,7 +27,6 @@ def test_register(client, inited_db):
         data = client("/api/v1/register", json=request_data)
         assert "id" in data
         assert data["username"] == "test_user2"
-        # assert data["phone_number"] is None
     finally:
         # 删除创建的用户
         test_user2 = get_user_by_username(inited_db, "test_user2")
@@ -122,9 +121,4 @@ def test_login_with_error_captcha(client, uuid_and_captcha):
     code, message = client("/api/v1/login", json=request_data)
     assert code == "ERR_005"
     assert message == "验证码错误"
-
-
-def test_get_users(client):
-    data = client("/api/v1/users")
-    assert True
 
