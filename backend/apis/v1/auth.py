@@ -11,7 +11,7 @@ from backend.core.dependencies import session_db
 from backend.core.utils import verify_password, get_password_hash
 from backend.core.config import settings
 from backend.core.exceptions import ServiceException
-from backend.captcha.image import ImageCaptcha
+from captcha.image import ImageCaptcha
 
 router = APIRouter()
 uuid_captcha_mapping = {}
@@ -64,7 +64,7 @@ def get_captcha_image(uuid: UUID):
 
     captcha_text = ''.join(random.choices(ascii_letters + digits, k=4))
     captcha_text = captcha_text.lower()
-    image = ImageCaptcha(height=38, width=100, font_sizes=(27, 29, 31))
+    image = ImageCaptcha(height=38, width=100, font_sizes=(28, 30, 32))
     captcha_image = image.generate(captcha_text).getvalue()
     # 保存uuid和验证码的对应关系，登录的时候比较客户端输入的验证码与生成的验证码是否一致
     uuid_captcha_mapping.update({str(uuid): captcha_text})
