@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session, selectinload
-from sqlalchemy import select
+from sqlalchemy import select, func
 from backend.db.models.user import User, Permission
 
 
@@ -67,3 +67,8 @@ def get_db_users(db: Session, page: int = None, page_size: int = None):
     if page is not None:
         stmt = stmt.offset(page * page_size)
     return db.scalars(stmt).all()
+
+
+def get_db_users_total(db: Session):
+    stmt = select(func.count()).select_from(User)
+    return db.execute(stmt).scalar()

@@ -5,7 +5,8 @@ from sqlalchemy import select
 from backend.db.models.user import User, Role
 from backend.apis.v1.auth import get_password_hash, uuid_captcha_mapping
 from backend.db.base import SessionDB
-from ..main import app
+from backend.main import app
+from backend.core.config import settings
 
 
 @pytest.fixture(scope="session")
@@ -53,7 +54,7 @@ def client(fastapi_client):
         else:
             method = getattr(fastapi_client, 'get')
 
-        result = method(url, **kwargs).json()
+        result = method(f"{settings.base_url}{url}", **kwargs).json()
         if result["success"]:
             return result["data"]
         return result["code"], result["message"]

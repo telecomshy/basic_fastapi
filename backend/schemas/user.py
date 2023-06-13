@@ -21,5 +21,14 @@ class UserBase(BaseModel):
 
 
 class GetUsersOut(BaseModel):
+    """获取所有用户信息"""
+
     success: bool = True
     data: list[UserBase] = []
+
+
+class GetUsersTotalOut(BaseModel):
+    """获取所有用户数量"""
+
+    success: bool = True
+    data: int

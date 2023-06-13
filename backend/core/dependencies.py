@@ -24,7 +24,7 @@ def token_payload(request: Request) -> dict:
         token = request.headers["Authorization"]
         # 如果token解码失败，或者token过期，都会抛出错误，分别会抛出JWTClaimsError和ExpiredSignatureError错误
         return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-    except JWTError:
+    except (JWTError, KeyError):
         raise ServiceException(code="ERR_006", message="token过期或解析失败")
 
 
