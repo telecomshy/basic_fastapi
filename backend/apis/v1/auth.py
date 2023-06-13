@@ -2,7 +2,6 @@ import random
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
-from captcha.image import ImageCaptcha
 from string import digits, ascii_letters
 from uuid import UUID
 from jose import jwt
@@ -12,6 +11,7 @@ from backend.core.dependencies import session_db
 from backend.core.utils import verify_password, get_password_hash
 from backend.core.config import settings
 from backend.core.exceptions import ServiceException
+from backend.captcha.image import ImageCaptcha
 
 router = APIRouter()
 uuid_captcha_mapping = {}
