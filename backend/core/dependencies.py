@@ -19,17 +19,20 @@ def session_db():
         session.close()
 
 
-def token_payload(request: Request) -> dict:
+def authorization(request: Request) -> dict:
     try:
-        token = request.headers["Authorization"]
+        # openAPI返回的Authorization header头前面总是有Bearer，自定义的可能没有scheme_name，所以切分获取实际的token
+        token = request.headers["Authorization"].split()[-1]
+        print("in authorization:", token)
         # 如果token解码失败，或者token过期，都会抛出错误，分别会抛出JWTClaimsError和ExpiredSignatureError错误
         return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
     except (JWTError, KeyError):
         raise ServiceException(code="ERR_006", message="token过期或解析失败")
 
 
-def current_user(sess: Session = Depends(session_db), payload: dict = Depends(token_payload)) -> User:
+def current_user(sess: Session = Depends(session_db), payload: dict = Depends(authorization)) -> User:
     """获取当前用户"""
 
     user_id = payload.get("user_id")
+    print("in current_user:", user_id)
     return get_user_by_id(sess, user_id)

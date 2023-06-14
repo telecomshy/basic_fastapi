@@ -1,10 +1,11 @@
 import random
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from string import digits, ascii_letters
 from uuid import UUID
-from jose import jwt
+from jose import jwt, JWTError
 from backend.schemas.auth import RegisterIn, RegisterOut, LoginIn, LoginOut
 from backend.db.crud.user import get_user_by_username, create_user, get_user_permission_scopes
 from backend.core.dependencies import session_db
@@ -71,26 +72,6 @@ def get_captcha_image(uuid: UUID):
     return Response(captcha_image, media_type="image/png")
 
 
-# @router.post("/token", summary="仅用于openAPI登录")
-# def login_openapi(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()) -> dict:
-#     """用户fastapi openAPI授权登录"""
-#
-#     username, password = form_data.username, form_data.password
-#     user_db = get_user_by_username(db, username)
-#
-#     if user_db is None or not verify_password(password, user_db.password):
-#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
-#
-#     access_token_expires = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
-#
-#     # 过期时间添加了会自动生效
-#     payload = {"username": username, "exp": access_token_expires}
-#     access_token = jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
-#
-#     # 返回json对象给前端，除了token，还包含前端需要的其它信息
-#     return {"access_token": access_token}
-
-
 # @router.post("/update-pass", summary="修改密码", response_model=UserInfoSche)
 # def update_password(pass_update_sche: PassUpdateSche, db: Session = Depends(get_db),
 #                     user_db: User = Depends(get_current_user)):
@@ -103,4 +84,21 @@ def get_captcha_image(uuid: UUID):
 #     hashed_password = get_password_hash(pass_update_sche.new_password1)
 #     user_db = update_user_password(db=db, user=user_db, hashed_password=hashed_password)
 #     return user_db
+
+
+@router.post("/openapi-login", summary="仅用于openAPI登录")
+def login_openapi(db: Session = Depends(session_db), form_data: OAuth2PasswordRequestForm = Depends()) -> dict:
+    """仅用于fastapi openAPI文档的授权登录"""
+
+    username, password = form_data.username, form_data.password
+    user_db = get_user_by_username(db, username)
+
+    if user_db is None or not verify_password(password, user_db.password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
+
+    payload = {"user_id": user_db.id}
+    access_token = jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+
+    # 返回json对象给前端，除了token，还包含前端需要的其它信息
+    return {"access_token": access_token}
 
