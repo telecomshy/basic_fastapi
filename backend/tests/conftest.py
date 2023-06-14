@@ -17,6 +17,7 @@ def fastapi_client() -> TestClient:
     return TestClient(app)
 
 
+# 因为有autouse，所以fixture会最先运行
 @pytest.fixture(scope="session", autouse=True)
 def inited_db():
     session = SessionDB()
@@ -50,13 +51,14 @@ def uuid_and_captcha(fastapi_client):
 
 
 @pytest.fixture(scope="session")
-def client(fastapi_client):
+def client(fastapi_client, token):
     def _request(url, **kwargs):
         if kwargs.get("json"):
             method = getattr(fastapi_client, 'post')
         else:
             method = getattr(fastapi_client, 'get')
 
+        kwargs["headers"] = {"Authorization": f"Bearer {token}"}
         result = method(f"{settings.base_url}{url}", **kwargs).json()
         if result["success"]:
             return result["data"]
@@ -66,7 +68,7 @@ def client(fastapi_client):
 
 
 @pytest.fixture(scope="session")
-def token(client, uuid_and_captcha):
+def token(fastapi_client, uuid_and_captcha):
     uuid, captcha = uuid_and_captcha
     login_data = {
         "uuid": uuid,
@@ -74,5 +76,5 @@ def token(client, uuid_and_captcha):
         "username": TEST_USERNAME,
         "password": TEST_PASSWORD
     }
-    token = client("/login", json=login_data)["token"]
-    return token
+    data = fastapi_client.post("/api/v1/login", json=login_data).json()
+    return data["data"]["token"]

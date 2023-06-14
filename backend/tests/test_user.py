@@ -1,5 +1,5 @@
-def test_get_users(client, token):
-    users = client("/users?page=0&page_size=10", headers={"Authorization": f"Bearer {token}"})
+def test_get_users(client):
+    users = client("/users?page=0&page_size=10")
     assert "test_user1" in [user["username"] for user in users]
 
 
