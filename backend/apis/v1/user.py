@@ -6,7 +6,7 @@ from backend.schemas.user import GetUsersOut, GetUsersTotalOut
 from backend.db.crud.user import get_db_users, get_db_users_total
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/openapi-login")
-router = APIRouter(dependencies=[Depends(current_user), Depends(oauth2_scheme)])
+router = APIRouter(dependencies=[Depends(authorization), Depends(oauth2_scheme)])
 
 
 @router.get("/users", response_model=GetUsersOut)

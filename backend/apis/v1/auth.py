@@ -1,11 +1,11 @@
 import random
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Response, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from string import digits, ascii_letters
 from uuid import UUID
-from jose import jwt, JWTError
+from jose import jwt
 from backend.schemas.auth import RegisterIn, RegisterOut, LoginIn, LoginOut
 from backend.db.crud.user import get_user_by_username, create_user, get_user_permission_scopes
 from backend.core.dependencies import session_db
@@ -86,9 +86,9 @@ def get_captcha_image(uuid: UUID):
 #     return user_db
 
 
-@router.post("/openapi-login", summary="仅用于openAPI登录")
+@router.post("/login-openapi", summary="仅用于openAPI登录")
 def login_openapi(db: Session = Depends(session_db), form_data: OAuth2PasswordRequestForm = Depends()) -> dict:
-    """仅用于fastapi openAPI文档的授权登录"""
+    """仅用于fastapi openAPI文档的登录"""
 
     username, password = form_data.username, form_data.password
     user_db = get_user_by_username(db, username)

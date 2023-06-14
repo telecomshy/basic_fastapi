@@ -8,17 +8,20 @@ from backend.db.base import SessionDB
 from backend.main import app
 from backend.core.config import settings
 
+TEST_USERNAME = "test_user1"
+TEST_PASSWORD = "Test_user1"
+
 
 @pytest.fixture(scope="session")
 def fastapi_client() -> TestClient:
     return TestClient(app)
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def inited_db():
     session = SessionDB()
     # 创建用户
-    user = User(username="test_user1", password=get_password_hash("Test_user1"))
+    user = User(username=TEST_USERNAME, password=get_password_hash(TEST_PASSWORD))
     # 创建角色
     for role_name in ["系统管理员", "普通用户"]:
         role = session.execute(select(Role).filter_by(role_name=role_name)).scalar()
@@ -35,7 +38,7 @@ def inited_db():
     session.close()
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def uuid_and_captcha(fastapi_client):
     """
     创建登陆时需要的uuid和captcha
@@ -46,7 +49,7 @@ def uuid_and_captcha(fastapi_client):
     return uuid, captcha
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def client(fastapi_client):
     def _request(url, **kwargs):
         if kwargs.get("json"):
@@ -60,3 +63,16 @@ def client(fastapi_client):
         return result["code"], result["message"]
 
     return _request
+
+
+@pytest.fixture(scope="session")
+def token(client, uuid_and_captcha):
+    uuid, captcha = uuid_and_captcha
+    login_data = {
+        "uuid": uuid,
+        "captcha": captcha,
+        "username": TEST_USERNAME,
+        "password": TEST_PASSWORD
+    }
+    token = client("/login", json=login_data)["token"]
+    return token
