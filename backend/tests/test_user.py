@@ -5,4 +5,4 @@ def test_get_users(client):
 
 def test_get_users_total(client, token):
     total = client("/users-total", headers={"Authorization": f"Bearer {token}"})
-    assert total > 0, total
+    assert total > 0
