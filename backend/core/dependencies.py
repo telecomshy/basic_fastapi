@@ -21,7 +21,7 @@ def session_db():
 
 def authorization(request: Request) -> dict:
     try:
-        # openAPI返回的Authorization header头前面总是有Bearer，自定义的可能没有scheme_name，所以切分获取实际的token
+        # openAPI返回的Authorization header头前面总是有Bearer，所以切分获取实际的token
         token = request.headers["Authorization"].split()[-1]
         # 如果token解码失败，或者token过期，都会抛出错误，分别会抛出JWTClaimsError和ExpiredSignatureError错误
         return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
