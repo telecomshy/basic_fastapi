@@ -24,7 +24,7 @@ role_perm_relationship = Table(
 class User(Base):
     __tablename__ = "user"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(String(30), unique=True)
     password: Mapped[str]
     email: Mapped[Optional[str]]
@@ -38,7 +38,7 @@ class User(Base):
 class Role(Base):
     __tablename__ = "role"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     role_name: Mapped[str] = mapped_column(unique=True)
     users: Mapped[list[User]] = relationship(secondary=user_role_relationship, back_populates="roles")
     perms: Mapped[list[Permission]] = relationship(secondary=role_perm_relationship, back_populates="roles")

@@ -6,7 +6,9 @@ from backend.schemas.user import GetUsersOut, GetUsersTotalOut
 from backend.db.crud.user import get_db_users, get_db_users_total
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/openapi-login")
-# 添加oauth2_scheme是为了openapi能够获得授权，生产环境可以删除
+# 添加oauth2_scheme仅仅是为了openapi文档能够通过验证，生产环境可以删除
+# 默认的oauth2_scheme通过请求的Authorization头获取token，如果解析失败抛出固定的401错误
+# authorization解析失败抛出自定义的ServiceError错误，实际返回的仍然是200响应
 router = APIRouter(dependencies=[Depends(authorization), Depends(oauth2_scheme)])
 
 
