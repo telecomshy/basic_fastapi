@@ -23,16 +23,11 @@ def test_register(client, inited_db):
         "password2": "Test_user2"
     }
 
-    try:
-        data = client("/register", json=request_data)
-        assert "id" in data
-        assert data["username"] == "test_user2"
-    finally:
-        # 删除创建的用户
-        test_user2 = get_user_by_username(inited_db, "test_user2")
-        if test_user2:
-            inited_db.delete(test_user2)
-            inited_db.commit()
+    data = client("/register", json=request_data)
+    user = inited_db.get(User, data["id"])
+    assert user.username == "test_user2"
+    inited_db.delete(user)
+    inited_db.commit()
 
 
 def test_register_with_error_username(client):
@@ -121,4 +116,3 @@ def test_login_with_error_captcha(client, uuid_and_captcha):
     code, message = client("/login", json=request_data)
     assert code == "ERR_005"
     assert message == "验证码错误"
-

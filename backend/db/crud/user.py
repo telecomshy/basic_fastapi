@@ -7,8 +7,8 @@ def create_user(sess: Session, username: str, password: str) -> User:
     """创建用户"""
 
     user = User(username=username, password=password)
-    sess.add(user)
-    sess.commit()
+    with sess.begin():
+        sess.add(user)
     return user
 
 
@@ -29,6 +29,7 @@ def get_user_by_username(sess: Session, username: str) -> User | None:
 def update_user_password(db: Session, user: User, hashed_password: str) -> User:
     """更新用户密码"""
 
+    # TODO 这里有问题，需要修改
     user.password = hashed_password
     db.commit()
     return user
