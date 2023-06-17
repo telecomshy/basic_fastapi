@@ -7,8 +7,7 @@ def create_user(sess: Session, username: str, password: str) -> User:
     """创建用户"""
 
     user = User(username=username, password=password)
-    with sess.begin():
-        sess.add(user)
+    sess.add(user)
     return user
 
 
