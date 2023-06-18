@@ -1,11 +1,9 @@
 from fastapi import APIRouter, Depends
-from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from backend.core.dependencies import session_db, authorization
 from backend.schemas.user import GetUsersOut, GetUsersTotalOut
 from backend.db.crud.user import get_db_users, get_db_user_counts
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/openapi-login")
 router = APIRouter(dependencies=[Depends(authorization)])
 
 

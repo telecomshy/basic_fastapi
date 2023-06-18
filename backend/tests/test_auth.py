@@ -1,19 +1,7 @@
-from backend.db.crud.user import get_user_by_username, get_user_by_id, change_user_password
-from backend.main import app
-from backend.core.dependencies import current_user, session_db
+from backend.db.crud.user import get_user_by_id, change_user_password
 from backend.core.utils import verify_password, get_password_hash
 from backend.core.config import settings
-from fastapi import Depends
-from sqlalchemy.orm import Session
 from backend.db.models.user import User
-
-
-def override_current_user(db: Session = Depends(session_db)) -> User:
-    user = get_user_by_username(db, settings.test_username)
-    return user
-
-
-app.dependency_overrides[current_user] = override_current_user
 
 
 def test_register(client, inited_db):

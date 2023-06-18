@@ -5,8 +5,26 @@ from sqlalchemy import select
 from backend.db.models.user import User, Role
 from backend.apis.v1.auth import get_password_hash, uuid_captcha_mapping
 from backend.db.base import SessionDB
+from backend.db.crud.user import get_user_by_username
 from backend.main import app
 from backend.core.config import settings
+from backend.core.dependencies import current_user, session_db, authorization
+from fastapi import Depends
+from sqlalchemy.orm import Session
+
+
+def override_current_user(db: Session = Depends(session_db)) -> User:
+    user = get_user_by_username(db, settings.test_username)
+    return user
+
+
+# 注意，depends参数不能随意设置，任何参数都会从路径函数的传参中去查找
+def override_authorization():
+    return True
+
+
+app.dependency_overrides[current_user] = override_current_user
+app.dependency_overrides[authorization] = override_authorization
 
 
 @pytest.fixture(scope="session")
@@ -48,23 +66,9 @@ def uuid_and_captcha(fastapi_client):
 
 
 @pytest.fixture(scope="session")
-def client(fastapi_client, token):
-    def _request(url, **kwargs):
+def client(fastapi_client):
+    def _request(url, *args, **kwargs):
         method = getattr(fastapi_client, 'post') if kwargs.get("json") else getattr(fastapi_client, 'get')
-        kwargs["headers"] = {"Authorization": f"Bearer {token}"}
-        return method(f"{settings.base_url}{url}", **kwargs).json()
+        return method(f"{settings.base_url}{url}", *args, **kwargs).json()
 
     return _request
-
-
-@pytest.fixture(scope="session")
-def token(fastapi_client, uuid_and_captcha):
-    uuid, captcha = uuid_and_captcha
-    login_data = {
-        "uuid": uuid,
-        "captcha": captcha,
-        "username": settings.test_username,
-        "password": settings.test_password
-    }
-    data = fastapi_client.post(f"{settings.base_url}/login", json=login_data).json()
-    return data["data"]["token"]
