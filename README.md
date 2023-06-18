@@ -22,20 +22,21 @@
 
 ## 2. 规范和注意事项
 
-- schema模型字段注释统一使用`Constrained Types`进行约束，右侧使用`Field`定制openAPI文档。
-  覆盖默认异常处理器，统一返回200响应。
+- schema模型字段注释统一使用`Constrained Types`进行约束，右侧使用`Field`定制openAPI文档，覆盖默认异常处理器，统一返回200响应。
   - 正常返回：
     ```
-    {"success": True, "data": data}
+    {"success": True, "message": message, "data": data}
     ```
-    对于正常返回，所有路径函数都提供了`response_model`，在schema模型中设置了`success`默认为True，
-    因此在路径函数中，统一返回`{"data": data}`即可。  
+    对于正常返回，所有路径函数都应提供`response_model`，`response_model`统一继承`OutBaseModel`，
+    `OutBaseModel`提供了success的默认值,因此`response_model`只需提供message和data即可。
+    即使前端不需要，接口也应该返回data，以便于进行测试，比如注册接口，可以返回用户id，这样在测试中可以根据id判断用户是否已经写入数据库。
+    message字段则用以说明接口用途。
   - 异常返回：
     ```
-    {"success": False, "code": code, "message": message, "detail": detail}
+    {"success": False, "code": code, "message": message, "data": data}
     ```
-    对于业务异常，直接抛出自定义的`ServiceException`即可，虽然是抛出一个异常，但实际上返回的是200的
-    的相应。
+    这里的异常指可以预料的业务异常，data用以放置一些详细的说明，比如pydantic抛出的数据验证失败的具体原因。
+    在开发中，直接抛出自定义的`ServiceException`即可，虽然是抛出一个异常，但实际上返回的是200的响应。
 - 数据库`crud`操作不对返回对象为空进行判断，统一在依赖或路径函数中进行判断处理。
 
 

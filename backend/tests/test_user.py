@@ -1,8 +1,10 @@
 def test_get_users(client):
-    users = client("/users?page=0&page_size=10")
+    result = client("/users?page=0&page_size=10")
+    users = result["data"]
     assert "test_user1" in [user["username"] for user in users]
 
 
 def test_get_users_total(client, token):
-    total = client("/users-total", headers={"Authorization": f"Bearer {token}"})
-    assert total > 0
+    result = client("/users-total", headers={"Authorization": f"Bearer {token}"})
+    total_user = result["data"]
+    assert total_user > 0

@@ -1,13 +1,11 @@
 from pydantic import Field, constr, validator
 from uuid import UUID
-from backend.schemas.base import BaseModel
+from backend.schemas.base import BaseModel, OutBaseModel
 
 PASS_PAT = r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?\d)(?=.*?[!@#$%^&*._-]).{8,}$"
 
 
-class RegisterIn(BaseModel):
-    username: constr(min_length=6, max_length=20) = Field(title="用户名",
-                                                          description="用户名不能少于6个字符，不能超过20个字符")
+class Password(BaseModel):
     # 密码必须大于8个字符，包含大小写字母，数字以及特殊字符
     password1: constr(regex=PASS_PAT) = Field(title="密码",
                                               description="密码必须大于8个字符，且包含大小写字母、数字以及特殊字符")
@@ -21,16 +19,13 @@ class RegisterIn(BaseModel):
         return v
 
 
-class RegisterOut(BaseModel):
-    class RegisterUserOut(BaseModel):
-        id: int = Field(title="用户ID")
-        username: str = Field(title="用户名")
+class RegisterIn(Password):
+    username: constr(min_length=6, max_length=20) = Field(title="用户名",
+                                                          description="用户名不能少于6个字符，不能超过20个字符")
 
-        class Config:
-            orm_mode = True
 
-    success: bool = True
-    data: RegisterUserOut
+class RegisterOut(OutBaseModel):
+    data: int
 
 
 class LoginIn(BaseModel):
@@ -40,25 +35,18 @@ class LoginIn(BaseModel):
     password: str = Field(title="密码")
 
 
-class LoginOut(BaseModel):
+class LoginOut(OutBaseModel):
     class Data(BaseModel):
         username: str = Field(title="用户名")
         scopes: list[str] = Field(title="权限域")
         token: str = Field(title="TOKEN")
 
-    success: bool = True
     data: Data
 
 
-class ChangePassIn(BaseModel):
+class ChangePassIn(Password):
     old_password: str = Field(..., title="旧密码")
-    new_password1: constr(regex=PASS_PAT) = Field(..., title="新密码",
-                                                  description="密码必须大于8个字符，且包含大小写字母、数字以及特殊字符")
-    new_password2: str = Field(..., title="重复新密码")
 
-    @validator("new_password2")
-    def match_password(cls, v, values):
-        # 检查密码是否匹配，如果password1验证失败，则不会在values中，所以需要先判断是否在values中
-        if 'new_password1' in values and v != values['new_password1']:
-            raise ValueError("两次输入的新密码不一致")
-        return v
+
+class ChangePassOut(OutBaseModel):
+    data: int

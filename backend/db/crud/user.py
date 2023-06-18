@@ -8,6 +8,7 @@ def create_user(sess: Session, username: str, password: str) -> User:
 
     user = User(username=username, password=password)
     sess.add(user)
+    sess.commit()
     return user
 
 
@@ -25,12 +26,11 @@ def get_user_by_username(sess: Session, username: str) -> User | None:
     return user
 
 
-def update_user_password(db: Session, user: User, hashed_password: str) -> User:
+def change_user_password(sess: Session, user: User, hashed_password: str) -> User:
     """更新用户密码"""
 
-    # TODO 这里有问题，需要修改
     user.password = hashed_password
-    db.commit()
+    sess.commit()
     return user
 
 
@@ -57,7 +57,7 @@ def get_user_permission_scopes(user: User) -> list[str]:
     return list(scopes)
 
 
-def get_db_users(db: Session, page: int = None, page_size: int = None):
+def get_db_users(db: Session, page: int = None, page_size: int = None) -> list[User]:
     """分页获取所有用户"""
 
     # 使用selectinload策略，避免懒加载，一次性读取和user相关的role信息
@@ -66,9 +66,9 @@ def get_db_users(db: Session, page: int = None, page_size: int = None):
         stmt = stmt.limit(page_size)
     if page is not None:
         stmt = stmt.offset(page * page_size)
-    return db.scalars(stmt).all()
+    return list(db.scalars(stmt))
 
 
-def get_db_users_total(db: Session):
+def get_db_user_counts(db: Session) -> int:
     stmt = select(func.count()).select_from(User)
     return db.execute(stmt).scalar()

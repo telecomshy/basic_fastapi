@@ -8,9 +8,6 @@ from backend.db.base import SessionDB
 from backend.main import app
 from backend.core.config import settings
 
-TEST_USERNAME = "test_user1"
-TEST_PASSWORD = "Test_user1"
-
 
 @pytest.fixture(scope="session")
 def fastapi_client() -> TestClient:
@@ -22,7 +19,7 @@ def fastapi_client() -> TestClient:
 def inited_db():
     session = SessionDB()
     # 创建用户
-    user = User(username=TEST_USERNAME, password=get_password_hash(TEST_PASSWORD))
+    user = User(username=settings.test_username, password=get_password_hash(settings.test_password))
     # 创建角色
     for role_name in ["系统管理员", "普通用户"]:
         role = session.execute(select(Role).filter_by(role_name=role_name)).scalar()
@@ -45,7 +42,7 @@ def uuid_and_captcha(fastapi_client):
     创建登陆时需要的uuid和captcha
     """
     uuid = str(uuid4())
-    fastapi_client.get(f"/api/v1/captcha?uuid={uuid}")
+    fastapi_client.get(f"{settings.base_url}/captcha?uuid={uuid}")
     captcha = uuid_captcha_mapping[uuid]
     return uuid, captcha
 
@@ -53,16 +50,9 @@ def uuid_and_captcha(fastapi_client):
 @pytest.fixture(scope="session")
 def client(fastapi_client, token):
     def _request(url, **kwargs):
-        if kwargs.get("json"):
-            method = getattr(fastapi_client, 'post')
-        else:
-            method = getattr(fastapi_client, 'get')
-
+        method = getattr(fastapi_client, 'post') if kwargs.get("json") else getattr(fastapi_client, 'get')
         kwargs["headers"] = {"Authorization": f"Bearer {token}"}
-        result = method(f"{settings.base_url}{url}", **kwargs).json()
-        if result["success"]:
-            return result["data"]
-        return result["code"], result["message"]
+        return method(f"{settings.base_url}{url}", **kwargs).json()
 
     return _request
 
@@ -73,8 +63,8 @@ def token(fastapi_client, uuid_and_captcha):
     login_data = {
         "uuid": uuid,
         "captcha": captcha,
-        "username": TEST_USERNAME,
-        "password": TEST_PASSWORD
+        "username": settings.test_username,
+        "password": settings.test_password
     }
-    data = fastapi_client.post("/api/v1/login", json=login_data).json()
+    data = fastapi_client.post(f"{settings.base_url}/login", json=login_data).json()
     return data["data"]["token"]
