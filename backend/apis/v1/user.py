@@ -6,19 +6,16 @@ from backend.schemas.user import GetUsersOut, GetUsersTotalOut
 from backend.db.crud.user import get_db_users, get_db_user_counts
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/openapi-login")
-# 添加oauth2_scheme仅仅是为了openapi文档能够通过验证，生产环境可以删除
-# 默认的oauth2_scheme通过请求的Authorization头获取token，如果解析失败抛出固定的401错误
-# authorization解析失败抛出自定义的ServiceError错误，实际返回的仍然是200响应
-router = APIRouter(dependencies=[Depends(authorization), Depends(oauth2_scheme)])
+router = APIRouter(dependencies=[Depends(authorization)])
 
 
-@router.get("/users", response_model=GetUsersOut)
+@router.get("/users", response_model=GetUsersOut, summary="获取用户列表")
 def get_users(page: int, page_size: int, sess: Session = Depends(session_db)):
     users = get_db_users(sess, page=page, page_size=page_size)
     return {"message": "获取用户列表", "data": users}
 
 
-@router.get("/users-total", response_model=GetUsersTotalOut)
+@router.get("/user-counts", response_model=GetUsersTotalOut, summary="获取用户总数")
 def get_user_counts(sess: Session = Depends(session_db)):
     user_counts = get_db_user_counts(sess)
     return {"message": "获取用户总数", "data": user_counts}
