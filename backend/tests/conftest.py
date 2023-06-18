@@ -4,8 +4,8 @@ from uuid import uuid4
 from sqlalchemy import select
 from backend.db.models.user import User, Role
 from backend.apis.v1.auth import get_password_hash, uuid_captcha_mapping
-from backend.db.base import SessionDB
 from backend.db.crud.user import get_user_by_username
+from backend.db.base import SessionDB
 from backend.main import app
 from backend.core.config import settings
 from backend.core.dependencies import current_user, session_db, authorization
@@ -32,26 +32,49 @@ def fastapi_client() -> TestClient:
     return TestClient(app)
 
 
-# 因为有autouse，所以fixture会最先运行
+# session应该是函数级别的scope，这样一个请求一个session
+@pytest.fixture
+def session():
+    sess = SessionDB()
+    try:
+        yield sess
+    finally:
+        sess.close()
+
+
+def create_test_user():
+    with SessionDB() as sess, sess.begin():
+        user = User(username=settings.test_username, password=get_password_hash(settings.test_password))
+        # 创建角色
+        for role_name in ["系统管理员", "普通用户"]:
+            role = sess.execute(select(Role).filter_by(role_name=role_name)).scalar()
+            if role is None:
+                role = Role(role_name=role_name)
+            user.roles.append(role)
+        # 关联用户和角色
+        sess.add(user)
+
+
+def delete_test_user():
+    with SessionDB() as sess, sess.begin():
+        user = get_user_by_username(sess, settings.test_username)
+        sess.delete(user)
+
+
 @pytest.fixture(scope="session", autouse=True)
-def inited_db():
-    session = SessionDB()
-    # 创建用户
-    user = User(username=settings.test_username, password=get_password_hash(settings.test_password))
-    # 创建角色
-    for role_name in ["系统管理员", "普通用户"]:
-        role = session.execute(select(Role).filter_by(role_name=role_name)).scalar()
-        if role is None:
-            role = Role(role_name=role_name)
-        user.roles.append(role)
-    # 关联用户和角色
-    session.add(user)
-    session.commit()
-    yield session
-    # 清理临时创建的用户
-    session.delete(user)
-    session.commit()
-    session.close()
+def mock_data():
+    create_test_user()
+    yield
+    delete_test_user()
+
+
+@pytest.fixture(scope="session")
+def client(fastapi_client):
+    def _request(url, *args, **kwargs):
+        method = getattr(fastapi_client, 'post') if kwargs.get("json") else getattr(fastapi_client, 'get')
+        return method(f"{settings.base_url}{url}", *args, **kwargs).json()
+
+    return _request
 
 
 @pytest.fixture(scope="session")
@@ -63,12 +86,3 @@ def uuid_and_captcha(fastapi_client):
     fastapi_client.get(f"{settings.base_url}/captcha?uuid={uuid}")
     captcha = uuid_captcha_mapping[uuid]
     return uuid, captcha
-
-
-@pytest.fixture(scope="session")
-def client(fastapi_client):
-    def _request(url, *args, **kwargs):
-        method = getattr(fastapi_client, 'post') if kwargs.get("json") else getattr(fastapi_client, 'get')
-        return method(f"{settings.base_url}{url}", *args, **kwargs).json()
-
-    return _request

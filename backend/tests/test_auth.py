@@ -4,7 +4,7 @@ from backend.core.config import settings
 from backend.db.models.user import User
 
 
-def test_register(client, inited_db):
+def test_register(client, session):
     """测试新增用户"""
 
     request_data = {
@@ -16,11 +16,11 @@ def test_register(client, inited_db):
     result = client("/register", json=request_data)
     assert result["message"] == "用户注册"
     user_id = result["data"]
-    user = inited_db.get(User, user_id)
+    user = session.get(User, user_id)
     assert user.username == "test_user2"
     assert verify_password("Test_user2", user.password)
-    inited_db.delete(user)
-    inited_db.commit()
+    session.delete(user)
+    session.commit()
 
 
 def test_register_with_error_username(client):
@@ -111,7 +111,7 @@ def test_login_with_error_captcha(client, uuid_and_captcha):
     assert result["message"] == "验证码错误"
 
 
-def test_change_password(client, inited_db):
+def test_change_password(client, session):
     request_data = {
         "old_password": settings.test_password,
         "password1": "Test_user1_new",
@@ -120,10 +120,10 @@ def test_change_password(client, inited_db):
     result = client("/change-pass", json=request_data)
     assert result["message"] == "修改密码"
     user_id = result["data"]
-    user = get_user_by_id(inited_db, user_id)
+    user = get_user_by_id(session, user_id)
     assert verify_password("Test_user1_new", user.password)
     hashed_password = get_password_hash(settings.test_password)
-    change_user_password(inited_db, user, hashed_password)
+    change_user_password(session, user, hashed_password)
 
 
 def test_change_password_with_error_password(client):
