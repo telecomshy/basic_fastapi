@@ -1,4 +1,4 @@
-fastapi[all]~=0.94.0
+fastapi[all]~=0.97.0
 pydantic~=1.10.6
 SQLAlchemy~=2.0.0
 alembic~=1.10.2

@@ -8,6 +8,7 @@ from backend.core.exceptions import ServiceException
 from backend.db.base import SessionDB
 from backend.db.crud.user import get_user_by_id
 from backend.db.models.user import User
+from typing import Annotated
 
 
 def session_db():
@@ -19,7 +20,8 @@ def session_db():
 
 
 class Authorization(OAuth2PasswordBearer):
-    """覆盖默认的OAuth"""
+    """覆盖默认的OAuth，以同时支持openapi文档的认证以及前端认证"""
+
     async def __call__(self, request: Request):
         scheme_token_str = request.headers.get("Authorization")
         scheme, token_str = get_authorization_scheme_param(scheme_token_str)
@@ -33,7 +35,10 @@ class Authorization(OAuth2PasswordBearer):
 authorization = Authorization(f"{settings.base_url}/login-openapi")
 
 
-def current_user(sess: Session = Depends(session_db), payload: dict = Depends(authorization)) -> User:
+def current_user(
+        sess: Annotated[Session, Depends(session_db)],
+        payload: Annotated[dict, Depends(authorization)]
+) -> User:
     """获取当前用户"""
 
     user_id = payload.get("user_id")

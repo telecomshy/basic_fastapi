@@ -11,16 +11,17 @@ from backend.db.crud.user import get_user_by_username, create_user, get_user_per
 from backend.db.models.user import User
 from backend.core.dependencies import session_db, current_user
 from backend.core.utils import verify_password, get_password_hash
-from backend.core.config import settings
 from backend.core.exceptions import ServiceException
+from backend.core.config import settings
 from captcha.image import ImageCaptcha
+from typing import Annotated
 
 router = APIRouter()
 uuid_captcha_mapping = {}
 
 
 @router.post("/register", summary="用户注册", response_model=RegisterOut)
-def register(register_data: RegisterIn, sess: Session = Depends(session_db)):
+def register(register_data: RegisterIn, sess: Annotated[Session, Depends(session_db)]):
     """用户注册"""
 
     user_db = get_user_by_username(sess, register_data.username)
@@ -35,7 +36,7 @@ def register(register_data: RegisterIn, sess: Session = Depends(session_db)):
 
 
 @router.post("/login", summary="用户登陆", response_model=LoginOut)
-def login(login_data: LoginIn, sess: Session = Depends(session_db)):
+def login(login_data: LoginIn, sess: Annotated[Session, Depends(session_db)]):
     """用户登陆，并添加验证码"""
 
     user_db = get_user_by_username(sess, login_data.username)
@@ -74,7 +75,10 @@ def get_captcha_image(uuid: UUID):
 
 
 @router.post("/login-openapi", summary="仅用于openAPI登录")
-def login_openapi(db: Session = Depends(session_db), form_data: OAuth2PasswordRequestForm = Depends()) -> dict:
+def login_openapi(
+        db: Annotated[Session, Depends(session_db)],
+        form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+) -> dict:
     """仅用于fastapi openAPI文档的登录"""
 
     username, password = form_data.username, form_data.password
@@ -91,8 +95,11 @@ def login_openapi(db: Session = Depends(session_db), form_data: OAuth2PasswordRe
 
 
 @router.post("/change-pass", summary="修改密码", response_model=ChangePassOut)
-def change_password(change_pass_data: ChangePassIn, sess: Session = Depends(session_db),
-                    user_db: User = Depends(current_user)):
+def change_password(
+        change_pass_data: ChangePassIn,
+        sess: Annotated[Session, Depends(session_db)],
+        user_db: Annotated[User, Depends(current_user)]
+):
     """更新用户密码"""
 
     if not verify_password(change_pass_data.old_password, user_db.password):

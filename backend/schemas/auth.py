@@ -45,7 +45,7 @@ class LoginOut(OutBaseModel):
 
 
 class ChangePassIn(Password):
-    old_password: str = Field(..., title="旧密码")
+    old_password: str = Field(title="旧密码")
 
 
 class ChangePassOut(OutBaseModel):
