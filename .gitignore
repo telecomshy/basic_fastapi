@@ -161,4 +161,4 @@ cython_debug/
 #.idea/
 
 # sqlite3 database
-*.db
+backend/app.db
