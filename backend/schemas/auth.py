@@ -1,6 +1,6 @@
 from pydantic import Field, constr, validator
 from uuid import UUID
-from backend.schemas.base import BaseModel, OutBaseModel
+from backend.schemas.base import BaseModel, OutDataModel
 
 PASS_PAT = r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?\d)(?=.*?[!@#$%^&*._-]).{8,}$"
 
@@ -24,7 +24,7 @@ class RegisterIn(Password):
                                                           description="用户名不能少于6个字符，不能超过20个字符")
 
 
-class RegisterOut(OutBaseModel):
+class RegisterOut(OutDataModel):
     data: int
 
 
@@ -35,7 +35,7 @@ class LoginIn(BaseModel):
     password: str = Field(title="密码")
 
 
-class LoginOut(OutBaseModel):
+class LoginOut(OutDataModel):
     class Data(BaseModel):
         username: str = Field(title="用户名")
         scopes: list[str] = Field(title="权限域")
@@ -48,5 +48,5 @@ class ChangePassIn(Password):
     old_password: str = Field(title="旧密码")
 
 
-class ChangePassOut(OutBaseModel):
+class ChangePassOut(OutDataModel):
     data: int

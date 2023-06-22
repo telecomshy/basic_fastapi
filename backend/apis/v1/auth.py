@@ -39,6 +39,10 @@ def register(register_data: RegisterIn, sess: Annotated[Session, Depends(session
 def login(login_data: LoginIn, sess: Annotated[Session, Depends(session_db)]):
     """用户登陆，并添加验证码"""
 
+    # 注意，uuid类型是UUID，所以要进行转换
+    if login_data.captcha.lower() != uuid_captcha_mapping.get(str(login_data.uuid)):
+        raise ServiceException(code="ERR_005", message="验证码错误")
+
     user_db = get_user_by_username(sess, login_data.username)
 
     if user_db is None:
@@ -47,10 +51,6 @@ def login(login_data: LoginIn, sess: Annotated[Session, Depends(session_db)]):
     if not verify_password(login_data.password, user_db.password):
         raise ServiceException(code="ERR_004", message="密码不正确")
 
-    # 注意，uuid类型是UUID，所以要进行转换
-    if login_data.captcha.lower() != uuid_captcha_mapping.get(str(login_data.uuid)):
-        raise ServiceException(code="ERR_005", message="验证码错误")
-
     # 创建token，过期时间添加到payload会自动生效，键值只能为exp
     access_token_expires = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
     payload = {"user_id": user_db.id, "exp": access_token_expires}
@@ -58,6 +58,7 @@ def login(login_data: LoginIn, sess: Annotated[Session, Depends(session_db)]):
     # 获取用户权限域
     scopes = get_user_permission_scopes(user_db)
 
+    print("return data")
     return {"message": "用户登录", "data": {"token": access_token, "username": user_db.username, "scopes": scopes}}
 
 

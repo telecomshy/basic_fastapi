@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select, func
-from backend.db.models.user import User, Permission
+from backend.db.models.user import User, Permission, Role
 
 
 def create_user(sess: Session, username: str, password: str) -> User:
@@ -72,3 +72,7 @@ def get_db_users(db: Session, page: int = None, page_size: int = None) -> list[U
 def get_db_user_counts(db: Session) -> int:
     stmt = select(func.count()).select_from(User)
     return db.execute(stmt).scalar()
+
+
+def get_db_roles(db: Session) -> list[Role]:
+    return list(db.scalars(select(Role)))
