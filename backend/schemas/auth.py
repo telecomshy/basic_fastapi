@@ -44,9 +44,9 @@ class LoginOut(OutDataModel):
     data: Data
 
 
-class ChangePassIn(Password):
+class UpdatePassIn(Password):
     old_password: str = Field(title="旧密码")
 
 
-class ChangePassOut(OutDataModel):
-    data: int
+class UpdatePassOut(OutDataModel):
+    data: int = Field(title="用户ID")

@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select, func
 from backend.db.models.user import User, Permission, Role
+from backend.schemas.user import UpdateUserIn
 
 
 def create_user(sess: Session, username: str, password: str) -> User:
@@ -76,3 +77,12 @@ def get_db_user_counts(db: Session) -> int:
 
 def get_db_roles(db: Session) -> list[Role]:
     return list(db.scalars(select(Role)))
+
+
+def update_db_user(db: Session, updated_user: UpdateUserIn):
+    user = db.get(User, updated_user.id)
+    user.email, user.phone_number = updated_user.email, updated_user.phone_number
+    user.roles = [db.get(Role, id_) for id_ in updated_user.roles]
+    db.add(user)
+    db.commit()
+    return user

@@ -1,10 +1,6 @@
 from pydantic import BaseModel as PydanticBaseModel
 from typing import Any
-
-
-def to_camel(snake_str):
-    parts = snake_str.split('_')
-    return parts[0] + ''.join(w.title() for w in parts[1:])
+from backend.core.utils import to_camel
 
 
 class BaseModel(PydanticBaseModel):
