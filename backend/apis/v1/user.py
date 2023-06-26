@@ -2,15 +2,20 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from backend.core.dependencies import session_db, authorization
-from backend.schemas.user import GetUsersOut, GetUserCountsOut, GetRolesOut, UpdateUserIn, UpdateUserOut
+from backend.schemas.user import GetUsersOut, GetUserCountsOut, GetRolesOut, UpdateUserIn, UpdateUserOut, GetUserIn
 from backend.db.crud.user import get_db_users, get_db_user_counts, get_db_roles, update_db_user
 
 router = APIRouter(dependencies=[Depends(authorization)])
 
 
-@router.get("/users", response_model=GetUsersOut, summary="获取用户列表")
-def get_users(page: int, page_size: int, sess: Annotated[Session, Depends(session_db)]):
-    users_db = get_db_users(sess, page=page, page_size=page_size)
+# @router.get("/users", response_model=GetUsersOut, summary="获取用户列表")
+# def get_users(page: int, page_size: int, sess: Annotated[Session, Depends(session_db)]):
+#     users_db = get_db_users(sess, page=page, page_size=page_size)
+#     return {"message": "获取用户列表", "data": users_db}
+
+@router.post("/users", response_model=GetUsersOut, summary="获取用户列表")
+def get_users(sess: Annotated[Session, Depends(session_db)], post_data: GetUserIn):
+    users_db = get_db_users(sess, **post_data.dict())
     return {"message": "获取用户列表", "data": users_db}
 
 

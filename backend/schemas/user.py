@@ -27,6 +27,13 @@ class GetUsersOut(OutDataModel):
     data: list[User] = Field(title="用户列表")
 
 
+class GetUserIn(BaseModel):
+    page: int = Field(title="页码")
+    page_size: int = Field(title="条目数", alias="pageSize")
+    username: str | None = Field(title="用户名")
+    roles: list[int] | None = Field(title='角色ID列表')
+
+
 class GetUserCountsOut(OutDataModel):
     """获取所有用户数量"""
 

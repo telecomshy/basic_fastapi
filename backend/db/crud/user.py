@@ -70,7 +70,7 @@ def get_db_users(
     # 使用selectinload策略，避免懒加载，一次性读取和user相关的role信息
     stmt = select(User)
     if username is not None:
-        stmt = stmt.filter(User.username.like(f"%{username}$"))
+        stmt = stmt.filter(User.username.like(f"%{username}%"))
     if roles is not None:
         stmt = stmt.join(User.roles).filter(Role.id.in_(roles))
     if page_size is not None:
@@ -78,7 +78,7 @@ def get_db_users(
     if page is not None:
         stmt = stmt.offset(page * page_size)
 
-    stmt = stmt.options(selectinload(User.roles))
+    # stmt = stmt.options(selectinload(User.roles))
     return list(db.scalars(stmt).unique())
 
 
