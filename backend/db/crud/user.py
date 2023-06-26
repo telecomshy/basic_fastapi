@@ -72,14 +72,14 @@ def get_db_users(
     if username is not None:
         stmt = stmt.filter(User.username.like(f"%{username}$"))
     if roles is not None:
-        stmt = stmt.filter(User.roles)
+        stmt = stmt.join(User.roles).filter(Role.id.in_(roles))
     if page_size is not None:
         stmt = stmt.limit(page_size)
     if page is not None:
         stmt = stmt.offset(page * page_size)
 
     stmt = stmt.options(selectinload(User.roles))
-    return list(db.scalars(stmt))
+    return list(db.scalars(stmt).unique())
 
 
 def get_db_user_counts(db: Session) -> int:
