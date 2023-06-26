@@ -58,15 +58,27 @@ def get_user_permission_scopes(user: User) -> list[str]:
     return list(scopes)
 
 
-def get_db_users(db: Session, page: int = None, page_size: int = None) -> list[User]:
+def get_db_users(
+        db: Session,
+        page: int = None,
+        page_size: int = None,
+        username: str = None,
+        roles: list[int] = None
+) -> list[User]:
     """分页获取所有用户"""
 
     # 使用selectinload策略，避免懒加载，一次性读取和user相关的role信息
-    stmt = select(User).options(selectinload(User.roles))
+    stmt = select(User)
+    if username is not None:
+        stmt = stmt.filter(User.username.like(f"%{username}$"))
+    if roles is not None:
+        stmt = stmt.filter(User.roles)
     if page_size is not None:
         stmt = stmt.limit(page_size)
     if page is not None:
         stmt = stmt.offset(page * page_size)
+
+    stmt = stmt.options(selectinload(User.roles))
     return list(db.scalars(stmt))
 
 
