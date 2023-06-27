@@ -45,10 +45,10 @@ class GetRolesOut(OutDataModel):
 
 
 class UpdateUserIn(BaseModel):
-    id: int
-    email: str
-    phone_number: str = Field(alias="phoneNumber")
-    roles: list[int]
+    id: int = Field(title="用户ID")
+    email: str | None = Field(title="邮箱")
+    phone_number: str | None = Field(title="手机号码", alias="phoneNumber")
+    roles: list[int] = Field(title="角色ID列表")
 
 
 class UpdateUserOut(OutDataModel):

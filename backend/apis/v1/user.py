@@ -15,7 +15,9 @@ router = APIRouter(dependencies=[Depends(authorization)])
 
 @router.post("/users", response_model=GetUsersOut, summary="获取用户列表")
 def get_users(sess: Annotated[Session, Depends(session_db)], post_data: GetUserIn):
-    users_db = get_db_users(sess, **post_data.dict())
+    post_data = post_data.dict()
+    post_data["page"] = post_data["page"] - 1  # 前端送过来的page从1开始，需要减1
+    users_db = get_db_users(sess, **post_data)
     return {"message": "获取用户列表", "data": users_db}
 
 
