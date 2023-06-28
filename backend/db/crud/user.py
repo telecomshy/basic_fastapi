@@ -62,29 +62,37 @@ def get_db_users(
         db: Session,
         page: int = None,
         page_size: int = None,
-        username: str = None,
-        roles: list[int] = None
-) -> list[User]:
+        roles: list[int] = None,
+        others: str = None,
+) -> tuple[int, list[User]]:
     """分页获取所有用户"""
 
-    # 使用selectinload策略，避免懒加载，一次性读取和user相关的role信息
     stmt = select(User)
-    if username is not None:
-        stmt = stmt.filter(User.username.like(f"%{username}%"))
-    if roles is not None:
-        stmt = stmt.join(User.roles).filter(Role.id.in_(roles))
+    count_stmt = select(func.count()).select_from(User)
+
+    # 根据用户名，邮箱，电话等模糊查询
+    if others is not None:
+        others_condition = User.username.like(f"%{others}%") | User.email.like(f"%{others}%") | User.phone_number.like(
+            f"%{others}%")
+        stmt = stmt.filter(others_condition)
+        count_stmt = count_stmt.filter(others_condition)
+
+    # 根据角色查询
+    if roles:  # roles可能为空列表，此时也意味着返回所有角色
+        roles_condition = Role.id.in_(roles)
+        stmt = stmt.join(User.roles).filter(roles_condition)
+        count_stmt = count_stmt.join(User.roles).filter(roles_condition)
+
+    users_total = db.scalar(count_stmt)
+
     if page_size is not None:
         stmt = stmt.limit(page_size)
     if page is not None:
         stmt = stmt.offset(page * page_size)
 
-    # stmt = stmt.options(selectinload(User.roles))
-    return list(db.scalars(stmt).unique())
+    users = list(db.scalars(stmt))
 
-
-def get_db_user_counts(db: Session) -> int:
-    stmt = select(func.count()).select_from(User)
-    return db.execute(stmt).scalar()
+    return users_total, users
 
 
 def get_db_roles(db: Session) -> list[Role]:

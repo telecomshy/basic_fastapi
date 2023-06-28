@@ -2,29 +2,18 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from backend.core.dependencies import session_db, authorization
-from backend.schemas.user import GetUsersOut, GetUserCountsOut, GetRolesOut, UpdateUserIn, UpdateUserOut, GetUserIn
-from backend.db.crud.user import get_db_users, get_db_user_counts, get_db_roles, update_db_user
+from backend.schemas.user import GetUsersOut, GetRolesOut, UpdateUserIn, UpdateUserOut, GetUserIn
+from backend.db.crud.user import get_db_users, get_db_roles, update_db_user
 
 router = APIRouter(dependencies=[Depends(authorization)])
 
-
-# @router.get("/users", response_model=GetUsersOut, summary="获取用户列表")
-# def get_users(page: int, page_size: int, sess: Annotated[Session, Depends(session_db)]):
-#     users_db = get_db_users(sess, page=page, page_size=page_size)
-#     return {"message": "获取用户列表", "data": users_db}
 
 @router.post("/users", response_model=GetUsersOut, summary="获取用户列表")
 def get_users(sess: Annotated[Session, Depends(session_db)], post_data: GetUserIn):
     post_data = post_data.dict()
     post_data["page"] = post_data["page"] - 1  # 前端送过来的page从1开始，需要减1
-    users_db = get_db_users(sess, **post_data)
-    return {"message": "获取用户列表", "data": users_db}
-
-
-@router.get("/user-counts", response_model=GetUserCountsOut, summary="获取用户总数")
-def get_user_counts(sess: Annotated[Session, Depends(session_db)]):
-    user_counts = get_db_user_counts(sess)
-    return {"message": "获取用户总数", "data": user_counts}
+    users_total, users_db = get_db_users(sess, **post_data)
+    return {"message": "获取用户列表", "data": {"total": users_total, "users": users_db}}
 
 
 @router.get("/roles", response_model=GetRolesOut, summary="获取角色列表")

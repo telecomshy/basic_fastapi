@@ -21,23 +21,21 @@ class User(CamelModel):
         orm_mode = True
 
 
-class GetUsersOut(OutDataModel):
-    """获取所有用户信息"""
-
-    data: list[User] = Field(title="用户列表")
-
-
 class GetUserIn(BaseModel):
     page: int = Field(title="页码")
     page_size: int = Field(title="条目数", alias="pageSize")
-    username: str | None = Field(title="用户名")
     roles: list[int] | None = Field(title='角色ID列表')
+    others: str | None = Field(title="用户名、邮箱或手机号码")
 
 
-class GetUserCountsOut(OutDataModel):
-    """获取所有用户数量"""
+class GetUsersOut(OutDataModel):
+    """获取所有用户信息"""
 
-    data: int = Field(title="用户总数")
+    class GetUsersOutData(BaseModel):
+        total: int = Field(title="用户总数")
+        users: list[User] = Field(tital="用户列表")
+
+    data: GetUsersOutData
 
 
 class GetRolesOut(OutDataModel):
