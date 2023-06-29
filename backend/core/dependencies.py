@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from backend.core.config import settings
 from backend.core.exceptions import ServiceException
 from backend.db.base import SessionDB
-from backend.db.crud.user import get_user_by_id
+from backend.db.crud.user import query_user_db_by_id
 from backend.db.models.user import User
 from typing import Annotated
 
@@ -42,4 +42,4 @@ def current_user(
     """获取当前用户"""
 
     user_id = payload.get("user_id")
-    return get_user_by_id(sess, user_id)
+    return query_user_db_by_id(sess, user_id)

@@ -7,7 +7,7 @@ from string import digits, ascii_letters
 from uuid import UUID
 from jose import jwt
 from backend.schemas.auth import RegisterIn, RegisterOut, LoginIn, LoginOut, UpdatePassIn, UpdatePassOut
-from backend.db.crud.user import get_user_by_username, register_user, get_user_permission_scopes, change_user_password
+from backend.db.crud.user import query_user_db_by_username, register_user_db, query_user_db_permission_scopes, update_user_db_password
 from backend.db.models.user import User
 from backend.core.dependencies import session_db, current_user
 from backend.core.utils import verify_password, get_password_hash
@@ -24,12 +24,12 @@ uuid_captcha_mapping = {}
 def register(register_data: RegisterIn, sess: Annotated[Session, Depends(session_db)]):
     """用户注册"""
 
-    user_db = get_user_by_username(sess, register_data.username)
+    user_db = query_user_db_by_username(sess, register_data.username)
 
     if user_db:
         raise ServiceException(code="ERR_002", message="用户已存在")
 
-    user_db = register_user(sess, register_data.username, register_data.password1)
+    user_db = register_user_db(sess, register_data.username, register_data.password1)
 
     return {"message": "用户注册", "data": user_db.id}
 
@@ -42,7 +42,7 @@ def login(login_data: LoginIn, sess: Annotated[Session, Depends(session_db)]):
     if login_data.captcha.lower() != uuid_captcha_mapping.get(str(login_data.uuid)):
         raise ServiceException(code="ERR_005", message="验证码错误")
 
-    user_db = get_user_by_username(sess, login_data.username)
+    user_db = query_user_db_by_username(sess, login_data.username)
 
     if user_db is None:
         raise ServiceException(code="ERR_003", message="用户名不存在")
@@ -55,7 +55,7 @@ def login(login_data: LoginIn, sess: Annotated[Session, Depends(session_db)]):
     payload = {"user_id": user_db.id, "exp": access_token_expires}
     access_token = jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
     # 获取用户权限域
-    scopes = get_user_permission_scopes(user_db)
+    scopes = query_user_db_permission_scopes(user_db)
 
     return {"message": "用户登录", "data": {"token": access_token, "username": user_db.username, "scopes": scopes}}
 
@@ -81,7 +81,7 @@ def login_openapi(
     """仅用于fastapi openAPI文档的登录"""
 
     username, password = form_data.username, form_data.password
-    user_db = get_user_by_username(db, username)
+    user_db = query_user_db_by_username(db, username)
 
     if user_db is None or not verify_password(password, user_db.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")
@@ -93,17 +93,17 @@ def login_openapi(
     return {"access_token": access_token}
 
 
-@router.post("/change-pass", summary="修改密码", response_model=UpdatePassOut)
-def change_password(
-        change_pass_data: UpdatePassIn,
-        sess: Annotated[Session, Depends(session_db)],
-        user_db: Annotated[User, Depends(current_user)]
-):
-    """更新用户密码"""
-
-    if not verify_password(change_pass_data.old_password, user_db.password):
-        raise ServiceException(code="ERR_004", message="原始密码不正确")
-
-    hashed_password = get_password_hash(change_pass_data.password1)
-    user_db = change_user_password(sess=sess, user=user_db, hashed_password=hashed_password)
-    return {"message": "修改密码", "data": user_db.id}
+# @router.post("/change-pass", summary="修改密码", response_model=UpdatePassOut)
+# def update_user_db_password(
+#         change_pass_data: UpdatePassIn,
+#         sess: Annotated[Session, Depends(session_db)],
+#         user_db: Annotated[User, Depends(current_user)]
+# ):
+#     """更新用户密码"""
+#
+#     if not verify_password(change_pass_data.old_password, user_db.password):
+#         raise ServiceException(code="ERR_004", message="原始密码不正确")
+#
+#     hashed_password = get_password_hash(change_pass_data.password1)
+#     user_db = update_db_user_password(sess=sess, user=user_db, hashed_password=hashed_password)
+#     return {"message": "修改密码", "data": user_db.id}

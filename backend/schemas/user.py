@@ -46,6 +46,7 @@ class QueryRolesOut(OutDataModel):
 
 class UpdateUserIn(BaseModel):
     id: int = Field(title="用户ID")
+    active: bool = Field(title="用户状态")
     email: str | None = Field(title="邮箱")
     phone_number: str | None = Field(title="手机号码", alias="phoneNumber")
     roles: list[int] = Field(title="角色ID列表")
@@ -53,3 +54,7 @@ class UpdateUserIn(BaseModel):
 
 class UpdateUserOut(OutDataModel):
     data: User
+
+
+class DeleteUserIn(BaseModel):
+    ids: int | list[int] = Field(title="用户ID或ID列表")

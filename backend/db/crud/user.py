@@ -1,11 +1,11 @@
 from sqlalchemy.orm import Session, selectinload
-from sqlalchemy import select, func
+from sqlalchemy import select, func, delete
 from backend.db.models.user import User, Permission, Role
 from backend.schemas.user import UpdateUserIn
 from backend.core.utils import get_password_hash
 
 
-def register_user(sess: Session, username: str, password: str) -> User:
+def register_user_db(sess: Session, username: str, password: str) -> User:
     """创建用户"""
 
     hashed_password = get_password_hash(password)
@@ -15,13 +15,13 @@ def register_user(sess: Session, username: str, password: str) -> User:
     return user
 
 
-def get_user_by_id(sess: Session, user_id: int) -> User | None:
+def query_user_db_by_id(sess: Session, user_id: int) -> User | None:
     """根据用户id获取用户"""
 
     return sess.get(User, user_id)
 
 
-def get_user_by_username(sess: Session, username: str) -> User | None:
+def query_user_db_by_username(sess: Session, username: str) -> User | None:
     """根据用户名获取用户"""
 
     stmt = select(User).filter_by(username=username)
@@ -29,7 +29,7 @@ def get_user_by_username(sess: Session, username: str) -> User | None:
     return user
 
 
-def change_user_password(sess: Session, user: User, hashed_password: str) -> User:
+def update_user_db_password(sess: Session, user: User, hashed_password: str) -> User:
     """更新用户密码"""
 
     user.password = hashed_password
@@ -37,7 +37,7 @@ def change_user_password(sess: Session, user: User, hashed_password: str) -> Use
     return user
 
 
-def get_user_permissions(user: User) -> list[Permission]:
+def query_user_db_permissions(user: User) -> list[Permission]:
     """获取用户所有权限"""
 
     perms = set()
@@ -47,11 +47,11 @@ def get_user_permissions(user: User) -> list[Permission]:
     return list(perms)
 
 
-def get_user_permission_scopes(user: User) -> list[str]:
+def query_user_db_permission_scopes(user: User) -> list[str]:
     """获取用户权限域"""
 
     scopes = set()
-    perms = get_user_permissions(user)
+    perms = query_user_db_permissions(user)
 
     for perm in perms:
         scope = perm.perm_rule.split("_")[1]
@@ -60,7 +60,7 @@ def get_user_permission_scopes(user: User) -> list[str]:
     return list(scopes)
 
 
-def get_db_users(
+def query_users_db(
         db: Session,
         page: int = None,
         page_size: int = None,
@@ -103,14 +103,20 @@ def get_db_users(
     return users_total, users
 
 
-def get_db_roles(db: Session) -> list[Role]:
+def query_roles_db(db: Session) -> list[Role]:
     return list(db.scalars(select(Role)))
 
 
-def update_db_user(db: Session, updated_user: UpdateUserIn):
-    user = db.get(User, updated_user.id)
-    user.email, user.phone_number = updated_user.email, updated_user.phone_number
-    user.roles = [db.get(Role, id_) for id_ in updated_user.roles]
+def update_user_db(db: Session, update_user: UpdateUserIn):
+    user = db.get(User, update_user.id)
+    user.email, user.phone_number, user.active = update_user.email, update_user.phone_number, update_user.active
+    user.roles = [db.get(Role, id_) for id_ in update_user.roles]
     db.add(user)
     db.commit()
     return user
+
+
+def delete_user_db(db: Session, user_ids: list[int]):
+    stmt = delete(User).where(User.id.in_(user_ids))
+    db.execute(stmt)
+    db.commit()

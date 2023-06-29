@@ -1,4 +1,4 @@
-from backend.db.crud.user import get_user_by_id, change_user_password
+from backend.db.crud.user import query_user_db_by_id, update_user_db_password
 from backend.core.utils import verify_password, get_password_hash
 from backend.core.config import settings
 from backend.db.models.user import User
@@ -120,10 +120,10 @@ def test_change_password(client, session):
     result = client("/change-pass", json=request_data)
     assert result["message"] == "修改密码"
     user_id = result["data"]
-    user = get_user_by_id(session, user_id)
+    user = query_user_db_by_id(session, user_id)
     assert verify_password("Test_user1_new", user.password)
     hashed_password = get_password_hash(settings.test_password)
-    change_user_password(session, user, hashed_password)
+    update_user_db_password(session, user, hashed_password)
 
 
 def test_change_password_with_error_password(client):

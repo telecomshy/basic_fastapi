@@ -4,7 +4,7 @@ from uuid import uuid4
 from sqlalchemy import select
 from backend.db.models.user import User, Role
 from backend.apis.v1.auth import get_password_hash, uuid_captcha_mapping
-from backend.db.crud.user import get_user_by_username
+from backend.db.crud.user import query_user_db_by_username
 from backend.db.base import SessionDB
 from backend.main import app
 from backend.core.config import settings
@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 
 def override_current_user(db: Session = Depends(session_db)) -> User:
-    user = get_user_by_username(db, settings.test_username)
+    user = query_user_db_by_username(db, settings.test_username)
     return user
 
 
@@ -44,7 +44,7 @@ def session():
 
 def create_test_user():
     with SessionDB() as sess, sess.begin():
-        user = User(username=settings.test_username, password=get_password_hash(settings.test_password))
+        user = User(username=settings.test_username, password=get_password_hash(settings.test_password), active=True)
         # 创建角色
         for role_name in ["系统管理员", "普通用户"]:
             role = sess.execute(select(Role).filter_by(role_name=role_name)).scalar()
@@ -57,7 +57,7 @@ def create_test_user():
 
 def delete_test_user():
     with SessionDB() as sess, sess.begin():
-        user = get_user_by_username(sess, settings.test_username)
+        user = query_user_db_by_username(sess, settings.test_username)
         sess.delete(user)
 
 
