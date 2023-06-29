@@ -65,6 +65,7 @@ def get_db_users(
         page: int = None,
         page_size: int = None,
         roles: list[int] = None,
+        active: bool = None,
         others: str = None,
 ) -> tuple[int, list[User]]:
     """分页获取所有用户"""
@@ -84,6 +85,11 @@ def get_db_users(
         roles_condition = Role.id.in_(roles)
         stmt = stmt.join(User.roles).filter(roles_condition)
         count_stmt = count_stmt.join(User.roles).filter(roles_condition)
+
+    if active is not None:
+        active_condition = User.active.is_(active)
+        stmt = stmt.filter(active_condition)
+        count_stmt = count_stmt.filter(active_condition)
 
     users_total = db.scalar(count_stmt)
 

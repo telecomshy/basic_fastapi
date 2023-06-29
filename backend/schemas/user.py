@@ -13,6 +13,7 @@ class Role(CamelModel):
 class User(CamelModel):
     id: int = Field(title="用户ID")
     username: str = Field(title="用户名")
+    active: bool = Field(title="状态")
     email: str | None = Field(title="邮箱")
     phone_number: str | None = Field(title="手机号码")
     roles: list[Role]
@@ -21,14 +22,15 @@ class User(CamelModel):
         orm_mode = True
 
 
-class GetUserIn(BaseModel):
+class QueryUserIn(BaseModel):
     page: int = Field(title="页码")
     page_size: int = Field(title="条目数", alias="pageSize")
     roles: list[int] | None = Field(title='角色ID列表')
+    active: bool | None = Field(title="用户状态")
     others: str | None = Field(title="用户名、邮箱或手机号码")
 
 
-class GetUsersOut(OutDataModel):
+class QueryUsersOut(OutDataModel):
     """获取所有用户信息"""
 
     class GetUsersOutData(BaseModel):
@@ -38,7 +40,7 @@ class GetUsersOut(OutDataModel):
     data: GetUsersOutData
 
 
-class GetRolesOut(OutDataModel):
+class QueryRolesOut(OutDataModel):
     data: list[Role] = Field(title="角色列表")
 
 
