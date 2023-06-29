@@ -2,12 +2,14 @@ from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select, func
 from backend.db.models.user import User, Permission, Role
 from backend.schemas.user import UpdateUserIn
+from backend.core.utils import get_password_hash
 
 
-def create_user(sess: Session, username: str, password: str) -> User:
+def register_user(sess: Session, username: str, password: str) -> User:
     """创建用户"""
 
-    user = User(username=username, password=password)
+    hashed_password = get_password_hash(password)
+    user = User(username=username, password=hashed_password, active=True)
     sess.add(user)
     sess.commit()
     return user

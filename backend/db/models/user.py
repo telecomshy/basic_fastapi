@@ -27,6 +27,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(String(30), unique=True)
     password: Mapped[str]
+    active: Mapped[bool]
     email: Mapped[Optional[str]]
     phone_number: Mapped[Optional[str]]
     roles: Mapped[list[Role]] = relationship(secondary=user_role_relationship, back_populates="users")

@@ -18,10 +18,8 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-
 from backend.db.base import Base
-# Base和模型类如果不在一个模块中，模型类均需要导入，否则无法识别具体要创建哪些类
-from backend.db.models.user import User
+from backend.db.models.user import User, Role, Permission
 
 target_metadata = Base.metadata
 
@@ -49,7 +47,6 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        render_as_batch=True
     )
 
     with context.begin_transaction():

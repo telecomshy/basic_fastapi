@@ -7,7 +7,7 @@ from string import digits, ascii_letters
 from uuid import UUID
 from jose import jwt
 from backend.schemas.auth import RegisterIn, RegisterOut, LoginIn, LoginOut, UpdatePassIn, UpdatePassOut
-from backend.db.crud.user import get_user_by_username, create_user, get_user_permission_scopes, change_user_password
+from backend.db.crud.user import get_user_by_username, register_user, get_user_permission_scopes, change_user_password
 from backend.db.models.user import User
 from backend.core.dependencies import session_db, current_user
 from backend.core.utils import verify_password, get_password_hash
@@ -29,8 +29,7 @@ def register(register_data: RegisterIn, sess: Annotated[Session, Depends(session
     if user_db:
         raise ServiceException(code="ERR_002", message="用户已存在")
 
-    hashed_password = get_password_hash(register_data.password1)
-    user_db = create_user(sess, register_data.username, hashed_password)
+    user_db = register_user(sess, register_data.username, register_data.password1)
 
     return {"message": "用户注册", "data": user_db.id}
 
