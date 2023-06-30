@@ -6,7 +6,8 @@ from backend.core.exceptions import ServiceException
 from backend.core.utils import verify_password, get_password_hash
 from backend.db.models.user import User
 from backend.schemas.auth import UpdatePassIn, UpdatePassOut
-from backend.schemas.user import QueryUsersOut, QueryRolesOut, UpdateUserIn, UpdateUserOut, QueryUserIn, DeleteUserIn
+from backend.schemas.user import QueryUsersOut, QueryRolesOut, UpdateUserIn, UpdateUserOut, QueryUserIn, DeleteUserIn, \
+    DeleteUserOut
 from backend.db.crud.user import query_users_db, query_roles_db, update_user_db, delete_user_db, update_user_db_password
 
 router = APIRouter(dependencies=[Depends(authorization)])
@@ -54,16 +55,15 @@ def update_user_password(
         raise ServiceException(code="ERR_007", message="密码更新失败")
 
 
-@router.post("/delete-user", summary="删除用户")
+@router.post("/delete-user", summary="删除用户", response_model=DeleteUserOut)
 def delete_users(sess: Annotated[Session, Depends(session_db)], post_data: DeleteUserIn):
-    print(post_data)
-    print(post_data.dict())
+    user_id = post_data.user_id
 
-    if isinstance(post_data, int):
-        post_data = [post_data]
+    if isinstance(user_id, int):
+        user_id = [user_id]
 
     try:
-        counts = delete_user_db(sess, post_data)
+        counts = delete_user_db(sess, user_id)
         return {"message": "删除用户", "data": counts}
     except Exception:
         raise ServiceException(code="ERR_007", message="用户删除失败")

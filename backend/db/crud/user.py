@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session, selectinload
-from sqlalchemy import select, func, delete, update
+from sqlalchemy import select, func, delete
 from backend.db.models.user import User, Permission, Role
 from backend.schemas.user import UpdateUserIn
 from backend.core.utils import get_password_hash
@@ -119,8 +119,10 @@ def update_user_db(sess: Session, update_user: UpdateUserIn):
     return user
 
 
-def delete_user_db(sess: Session, user_ids: list[int]):
-    stmt = delete(User).where(User.id.in_(user_ids))
-    result = sess.execute(stmt)
+def delete_user_db(sess: Session, users_id: list[int]):
+    # 注意，如果使用sess.execute(delete(User).where(User.id.in_(user_ids)))这样的语句，不会删除关联对象
+    for user_id in users_id:
+        user = sess.get(User, user_id)
+        sess.delete(user)
     sess.commit()
-    return result.rowcount
+    return len(users_id)

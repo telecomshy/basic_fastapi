@@ -56,9 +56,8 @@ class UpdateUserOut(OutDataModel):
     data: User
 
 
-class DeleteUserIn(BaseModel):
-    __root__: list[int] | int
-    # ids: int | list[int] = Field(title="用户ID或ID列表")
+class DeleteUserIn(CamelModel):
+    user_id: int | list[int] = Field(title="用户ID或ID列表")
 
 
 class DeleteUserOut(OutDataModel):
