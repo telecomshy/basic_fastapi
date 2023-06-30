@@ -3,12 +3,13 @@ from fastapi.testclient import TestClient
 from uuid import uuid4
 from sqlalchemy import select
 from backend.db.models.user import User, Role
-from backend.apis.v1.auth import get_password_hash, uuid_captcha_mapping
+from backend.apis.v1.auth import uuid_captcha_mapping
 from backend.db.crud.user import query_user_db_by_username
 from backend.db.base import SessionDB
 from backend.main import app
 from backend.core.config import settings
 from backend.core.dependencies import current_user, session_db, authorization
+from backend.core.utils import get_password_hash
 from fastapi import Depends
 from sqlalchemy.orm import Session
 

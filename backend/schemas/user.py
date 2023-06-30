@@ -1,4 +1,4 @@
-from pydantic import Field
+from pydantic import Field, conlist
 from backend.schemas.base import BaseModel, OutDataModel, CamelModel
 
 
@@ -49,7 +49,7 @@ class UpdateUserIn(BaseModel):
     active: bool = Field(title="用户状态")
     email: str | None = Field(title="邮箱")
     phone_number: str | None = Field(title="手机号码", alias="phoneNumber")
-    roles: list[int] = Field(title="角色ID列表")
+    roles: conlist(int, min_items=1) = Field(title="角色ID列表")
 
 
 class UpdateUserOut(OutDataModel):
@@ -57,4 +57,9 @@ class UpdateUserOut(OutDataModel):
 
 
 class DeleteUserIn(BaseModel):
-    ids: int | list[int] = Field(title="用户ID或ID列表")
+    __root__: list[int] | int
+    # ids: int | list[int] = Field(title="用户ID或ID列表")
+
+
+class DeleteUserOut(OutDataModel):
+    data: int = Field(title="删除用户数")

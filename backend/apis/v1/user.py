@@ -27,31 +27,43 @@ def query_roles(sess: Annotated[Session, Depends(session_db)]):
 
 
 @router.post("/update-user", response_model=UpdateUserOut, summary="更新用户")
-def update_user(sess: Annotated[Session, Depends(session_db)], user: UpdateUserIn):
-    user_db = update_user_db(sess, user)
-    return {"message": "更新用户", "data": user_db}
+def update_user(sess: Annotated[Session, Depends(session_db)], post_data: UpdateUserIn):
+    try:
+        user_db = update_user_db(sess, post_data)
+        return {"message": "更新用户", "data": user_db}
+    except Exception:
+        raise ServiceException(code="ERR_007", message="用户更新失败")
 
 
 @router.post("/change-pass", summary="修改密码", response_model=UpdatePassOut)
 def update_user_password(
-        change_pass_data: UpdatePassIn,
+        post_data: UpdatePassIn,
         sess: Annotated[Session, Depends(session_db)],
         user: Annotated[User, Depends(current_user)]
 ):
     """更新用户密码"""
 
-    if not verify_password(change_pass_data.old_password, user.password):
+    if not verify_password(post_data.old_password, user.password):
         raise ServiceException(code="ERR_004", message="原始密码不正确")
 
-    hashed_password = get_password_hash(change_pass_data.password1)
-    user_db = update_user_db_password(sess=sess, user=user, hashed_password=hashed_password)
-    return {"message": "修改密码", "data": user_db.id}
+    hashed_password = get_password_hash(post_data.password1)
+    try:
+        user_db = update_user_db_password(sess=sess, user=user, hashed_password=hashed_password)
+        return {"message": "修改密码", "data": user_db.id}
+    except Exception:
+        raise ServiceException(code="ERR_007", message="密码更新失败")
 
 
 @router.post("/delete-user", summary="删除用户")
-def delete_users(sess: Annotated[Session, Depends(session_db)], user_ids: DeleteUserIn):
-    if isinstance(user_ids, int):
-        user_ids = [user_ids]
-    # TODO 使用try捕获错误
-    user_ids = delete_user_db(sess, user_ids)
-    return {"message": "删除用户", "data": user_ids}
+def delete_users(sess: Annotated[Session, Depends(session_db)], post_data: DeleteUserIn):
+    print(post_data)
+    print(post_data.dict())
+
+    if isinstance(post_data, int):
+        post_data = [post_data]
+
+    try:
+        counts = delete_user_db(sess, post_data)
+        return {"message": "删除用户", "data": counts}
+    except Exception:
+        raise ServiceException(code="ERR_007", message="用户删除失败")

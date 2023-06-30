@@ -6,11 +6,10 @@ from sqlalchemy.orm import Session
 from string import digits, ascii_letters
 from uuid import UUID
 from jose import jwt
-from backend.schemas.auth import RegisterIn, RegisterOut, LoginIn, LoginOut, UpdatePassIn, UpdatePassOut
-from backend.db.crud.user import query_user_db_by_username, register_user_db, query_user_db_permission_scopes, update_user_db_password
-from backend.db.models.user import User
-from backend.core.dependencies import session_db, current_user
-from backend.core.utils import verify_password, get_password_hash
+from backend.schemas.auth import RegisterIn, RegisterOut, LoginIn, LoginOut
+from backend.db.crud.user import query_user_db_by_username, register_user_db, query_user_db_permission_scopes
+from backend.core.dependencies import session_db
+from backend.core.utils import verify_password
 from backend.core.exceptions import ServiceException
 from backend.core.config import settings
 from captcha.image import ImageCaptcha
@@ -29,9 +28,11 @@ def register(register_data: RegisterIn, sess: Annotated[Session, Depends(session
     if user_db:
         raise ServiceException(code="ERR_002", message="用户已存在")
 
-    user_db = register_user_db(sess, register_data.username, register_data.password1)
-
-    return {"message": "用户注册", "data": user_db.id}
+    try:
+        user_db = register_user_db(sess, register_data.username, register_data.password1)
+        return {"message": "用户注册", "data": user_db.id}
+    except Exception:
+        return ServiceException(code="ERR_007", message="注册失败")
 
 
 @router.post("/login", summary="用户登陆", response_model=LoginOut)
@@ -91,19 +92,3 @@ def login_openapi(
 
     # 返回json对象给前端，除了token，还包含前端需要的其它信息
     return {"access_token": access_token}
-
-
-# @router.post("/change-pass", summary="修改密码", response_model=UpdatePassOut)
-# def update_user_db_password(
-#         change_pass_data: UpdatePassIn,
-#         sess: Annotated[Session, Depends(session_db)],
-#         user_db: Annotated[User, Depends(current_user)]
-# ):
-#     """更新用户密码"""
-#
-#     if not verify_password(change_pass_data.old_password, user_db.password):
-#         raise ServiceException(code="ERR_004", message="原始密码不正确")
-#
-#     hashed_password = get_password_hash(change_pass_data.password1)
-#     user_db = update_db_user_password(sess=sess, user=user_db, hashed_password=hashed_password)
-#     return {"message": "修改密码", "data": user_db.id}

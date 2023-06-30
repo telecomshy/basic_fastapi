@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session, selectinload
-from sqlalchemy import select, func, delete
+from sqlalchemy import select, func, delete, update
 from backend.db.models.user import User, Permission, Role
 from backend.schemas.user import UpdateUserIn
 from backend.core.utils import get_password_hash
@@ -10,6 +10,9 @@ def register_user_db(sess: Session, username: str, password: str) -> User:
 
     hashed_password = get_password_hash(password)
     user = User(username=username, password=hashed_password, active=True)
+    # 新注册的用户用户都是普通用户
+    role = sess.scalar(select(Role).filter_by(role_name="普通用户"))
+    user.roles.append(role)
     sess.add(user)
     sess.commit()
     return user
@@ -103,20 +106,21 @@ def query_users_db(
     return users_total, users
 
 
-def query_roles_db(db: Session) -> list[Role]:
-    return list(db.scalars(select(Role)))
+def query_roles_db(sess: Session) -> list[Role]:
+    return list(sess.scalars(select(Role)))
 
 
-def update_user_db(db: Session, update_user: UpdateUserIn):
-    user = db.get(User, update_user.id)
+def update_user_db(sess: Session, update_user: UpdateUserIn):
+    user = sess.get(User, update_user.id)
     user.email, user.phone_number, user.active = update_user.email, update_user.phone_number, update_user.active
-    user.roles = [db.get(Role, id_) for id_ in update_user.roles]
-    db.add(user)
-    db.commit()
+    user.roles = [sess.get(Role, id_) for id_ in update_user.roles]
+    sess.add(user)
+    sess.commit()
     return user
 
 
-def delete_user_db(db: Session, user_ids: list[int]):
+def delete_user_db(sess: Session, user_ids: list[int]):
     stmt = delete(User).where(User.id.in_(user_ids))
-    db.execute(stmt)
-    db.commit()
+    result = sess.execute(stmt)
+    sess.commit()
+    return result.rowcount
