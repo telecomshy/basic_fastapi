@@ -5,8 +5,9 @@ from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from backend.core.config import settings
 from backend.core.exceptions import ServiceException
+from backend.core.utils import convert_to_list
 from backend.db.base import SessionDB
-from backend.db.crud.user import query_user_db_by_id
+from backend.db.crud.user import query_user_db_by_id, query_user_db_permissions
 from backend.db.models.user import User
 from typing import Annotated
 
@@ -43,3 +44,13 @@ def current_user(
 
     user_id = payload.get("user_id")
     return query_user_db_by_id(sess, user_id)
+
+
+class RequiredPermissions:
+    def __init__(self, *args):
+        self.required_perms = convert_to_list(*args)
+
+    def __call__(self, user=Depends(current_user)):
+        user_perms = [perm.perm_rule for perm in query_user_db_permissions(user)]
+        if any(required_perm not in user_perms for required_perm in self.required_perms):
+            raise ServiceException(code="ERR_008", message="无相应权限")

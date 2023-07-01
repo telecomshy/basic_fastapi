@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from backend.core.dependencies import session_db, authorization, current_user
+from backend.core.dependencies import session_db, authorization, current_user, RequiredPermissions
 from backend.core.exceptions import ServiceException
 from backend.core.utils import verify_password, get_password_hash
 from backend.db.models.user import User
@@ -27,8 +27,10 @@ def query_roles(sess: Annotated[Session, Depends(session_db)]):
     return {"message": "获取角色列表", "data": roles_db}
 
 
-@router.post("/update-user", response_model=UpdateUserOut, summary="更新用户")
+@router.post("/update-user", response_model=UpdateUserOut, summary="更新用户",
+             dependencies=[Depends(RequiredPermissions('update_user'))])
 def update_user(sess: Annotated[Session, Depends(session_db)], post_data: UpdateUserIn):
+    print("in update user:", post_data)
     try:
         user_db = update_user_db(sess, post_data)
         return {"message": "更新用户", "data": user_db}
@@ -55,7 +57,8 @@ def update_user_password(
         raise ServiceException(code="ERR_007", message="密码更新失败")
 
 
-@router.post("/delete-user", summary="删除用户", response_model=DeleteUserOut)
+@router.post("/delete-user", summary="删除用户", response_model=DeleteUserOut,
+             dependencies=[Depends(RequiredPermissions('delete_user'))])
 def delete_users(sess: Annotated[Session, Depends(session_db)], post_data: DeleteUserIn):
     user_id = post_data.user_id
 

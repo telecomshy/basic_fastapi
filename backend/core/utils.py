@@ -16,3 +16,19 @@ def to_camel(snake_str):
     parts = snake_str.split('_')
     return parts[0] + ''.join(w.title() for w in parts[1:])
 
+
+def convert_to_list(*args, unique=False) -> list:
+    lst = []
+    for arg in args:
+        if isinstance(arg, str):
+            lst.append(arg)
+        else:
+            try:
+                lst.extend(arg)
+            except TypeError:
+                pass
+
+    if unique:
+        lst = list(set(lst))
+
+    return lst
