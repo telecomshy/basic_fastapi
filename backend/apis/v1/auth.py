@@ -7,7 +7,7 @@ from string import digits, ascii_letters
 from uuid import UUID
 from jose import jwt
 from backend.schemas.auth import RegisterIn, RegisterOut, LoginIn, LoginOut
-from backend.db.crud.user import query_user_db_by_username, register_user_db, query_user_db_permission_scopes
+from backend.db.crud.user import query_user_db_by_username, register_user_db, get_user_db_permission_scopes
 from backend.core.dependencies import session_db
 from backend.core.utils import verify_password
 from backend.core.exceptions import ServiceException
@@ -30,7 +30,7 @@ def register(register_data: RegisterIn, sess: Annotated[Session, Depends(session
 
     try:
         user_db = register_user_db(sess, register_data.username, register_data.password1)
-        return {"message": "用户注册", "data": user_db.id}
+        return {"message": "用户ID", "data": user_db.id}
     except Exception:
         return ServiceException(code="ERR_007", message="注册失败")
 
@@ -51,14 +51,24 @@ def login(login_data: LoginIn, sess: Annotated[Session, Depends(session_db)]):
     if not verify_password(login_data.password, user_db.password):
         raise ServiceException(code="ERR_004", message="密码不正确")
 
+    if not user_db.active:
+        raise ServiceException(code="ERR_009", message="用户已被锁定，请联系管理员!")
+
     # 创建token，过期时间添加到payload会自动生效，键值只能为exp
     access_token_expires = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
     payload = {"user_id": user_db.id, "exp": access_token_expires}
     access_token = jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
     # 获取用户权限域
-    scopes = query_user_db_permission_scopes(user_db)
+    scopes = get_user_db_permission_scopes(user_db)
 
-    return {"message": "用户登录", "data": {"token": access_token, "username": user_db.username, "scopes": scopes}}
+    return {
+        "message": "token，用户名及权限域",
+        "data": {
+            "token": access_token,
+            "username": user_db.username,
+            "scopes": scopes
+        }
+    }
 
 
 @router.get("/captcha", summary="获取验证码", response_class=Response)

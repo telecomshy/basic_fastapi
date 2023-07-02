@@ -1,4 +1,4 @@
-from pydantic import BaseModel as PydanticBaseModel, validator
+from pydantic import BaseModel as PydanticBaseModel, validator, Field
 from typing import Any
 from backend.core.utils import to_camel
 
@@ -15,14 +15,12 @@ class BaseModel(PydanticBaseModel):
             return None
         return v
 
-
-class OutDataModel(BaseModel):
-    success = True
-    message: str
-    data: Any
-
-
-class CamelModel(BaseModel):
     class Config:
         alias_generator = to_camel
         allow_population_by_field_name = True
+
+
+class OutDataModel(BaseModel):
+    success: bool = Field(True, title="成功标志")
+    message: str = Field(title="接口说明")
+    data: Any = Field(title="响应数据")

@@ -7,7 +7,7 @@ from backend.core.config import settings
 from backend.core.exceptions import ServiceException
 from backend.core.utils import convert_to_list
 from backend.db.base import SessionDB
-from backend.db.crud.user import query_user_db_by_id, query_user_db_permissions
+from backend.db.crud.user import query_user_db_by_id, get_user_db_permissions
 from backend.db.models.user import User
 from typing import Annotated
 
@@ -51,6 +51,6 @@ class RequiredPermissions:
         self.required_perms = convert_to_list(*args)
 
     def __call__(self, user=Depends(current_user)):
-        user_perms = [perm.perm_rule for perm in query_user_db_permissions(user)]
+        user_perms = [perm.perm_rule for perm in get_user_db_permissions(user)]
         if any(required_perm not in user_perms for required_perm in self.required_perms):
             raise ServiceException(code="ERR_008", message="无相应权限")

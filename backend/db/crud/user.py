@@ -40,7 +40,7 @@ def update_user_db_password(sess: Session, user: User, hashed_password: str) -> 
     return user
 
 
-def query_user_db_permissions(user: User) -> list[Permission]:
+def get_user_db_permissions(user: User) -> list[Permission]:
     """获取用户所有权限"""
 
     perms = set()
@@ -50,11 +50,11 @@ def query_user_db_permissions(user: User) -> list[Permission]:
     return list(perms)
 
 
-def query_user_db_permission_scopes(user: User) -> list[str]:
+def get_user_db_permission_scopes(user: User) -> list[str]:
     """获取用户权限域"""
 
     scopes = set()
-    perms = query_user_db_permissions(user)
+    perms = get_user_db_permissions(user)
 
     for perm in perms:
         scope = perm.perm_rule.split("_")[1]
