@@ -58,15 +58,11 @@ def login(login_data: LoginIn, sess: Annotated[Session, Depends(session_db)]):
     access_token_expires = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
     payload = {"user_id": user_db.id, "exp": access_token_expires}
     access_token = jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
-    # 获取用户权限域
-    scopes = get_user_db_permission_scopes(user_db)
 
     return {
-        "message": "token，用户名及权限域",
+        "message": "用户token",
         "data": {
             "token": access_token,
-            "username": user_db.username,
-            "scopes": scopes
         }
     }
 

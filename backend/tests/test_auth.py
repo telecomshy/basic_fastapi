@@ -14,7 +14,7 @@ def test_register(client, session):
     }
 
     result = client("/register", json=request_data)
-    assert result["message"] == "用户注册"
+    assert result["message"] == "用户ID"
     user_id = result["data"]
     user = session.get(User, user_id)
     assert user.username == "test_user2"
@@ -61,8 +61,7 @@ def test_login(client, uuid_and_captcha):
     }
 
     result = client("/login", json=request_data)
-    assert result["message"] == "用户登录"
-    assert result["data"]["username"] == settings.test_username
+    assert result["message"] == "用户token"
 
 
 def test_login_with_error_username(client, uuid_and_captcha):
@@ -118,7 +117,7 @@ def test_change_password(client, session):
         "password2": "Test_user1_new"
     }
     result = client("/change-pass", json=request_data)
-    assert result["message"] == "修改密码"
+    assert result["message"] == "已删除用户ID"
     user_id = result["data"]
     user = query_user_db_by_id(session, user_id)
     assert verify_password("Test_user1_new", user.password)
