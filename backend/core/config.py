@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     base_url: str = "/api/v1"
     test_username: str
     test_password: str
+    init_password: str
 
     class Config:
         env_file = "backend/.env"

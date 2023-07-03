@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from backend.core.dependencies import session_db, authorization, current_user, RequiredPermissions
 from backend.core.exceptions import ServiceException
@@ -8,7 +8,7 @@ from backend.core.config import settings
 from backend.db.models.user import User
 from backend.schemas.auth import UpdatePassIn, UpdatePassOut
 from backend.schemas.user import QueryUsersOut, QueryRolesOut, UpdateUserIn, UpdateUserOut, QueryUserIn, DeleteUserIn
-from backend.schemas.user import DeleteUserOut, CurrentUserNameOut, CurrentUserScopeOut
+from backend.schemas.user import DeleteUserOut, CurrentUserNameOut, CurrentUserScopeOut, ResetUserPasswordOut
 from backend.db.crud.user import query_users_db, get_roles_db, update_user_db, delete_user_db, update_user_db_password
 from backend.db.crud.user import get_user_db_permission_scopes, get_user_db_by_id
 
@@ -90,7 +90,7 @@ def delete_users(
 
     try:
         counts = delete_user_db(sess, users_id)
-        return {"message": "删除用户总数", "data": counts}
+        return {"message": "删除用户数", "data": counts}
     except Exception:
         raise ServiceException(code="ERR_007", message="删除用户失败")
 
@@ -120,14 +120,19 @@ def query_current_user(user_db: Annotated[User, Depends(current_user)]):
 
 
 @router.get(
-    "/reset_pass",
-    summary="重置用户密码"
+    "/reset-pass",
+    summary="重置用户密码",
+    response_model=ResetUserPasswordOut
 )
-def reset_user_password(user_id: int, sess: Annotated[Session, Depends(session_db)]):
+def reset_user_password(
+        sess: Annotated[Session, Depends(session_db)],
+        user_id: Annotated[int, Query(alias="userId")],
+):
     try:
         user_db = get_user_db_by_id(sess, user_id)
-        init_pass = get_password_hash(settings.init_pass)
-        update_user_db_password(sess, user_db, init_pass)
+        init_pass = settings.init_password
+        hashed_init_pass = get_password_hash(settings.init_password)
+        update_user_db_password(sess, user_db, hashed_init_pass)
         return {"message": "初始密码", "data": init_pass}
     except Exception:
         raise ServiceException(code="ERR_007", message="重置密码失败")

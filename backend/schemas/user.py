@@ -70,3 +70,7 @@ class CurrentUserNameOut(OutDataModel):
 
 class CurrentUserScopeOut(OutDataModel):
     data: list[str] = Field(title="当前用户所有域")
+
+
+class ResetUserPasswordOut(OutDataModel):
+    data: str = Field(title="初始密码")
