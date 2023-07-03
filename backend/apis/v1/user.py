@@ -4,12 +4,13 @@ from sqlalchemy.orm import Session
 from backend.core.dependencies import session_db, authorization, current_user, RequiredPermissions
 from backend.core.exceptions import ServiceException
 from backend.core.utils import verify_password, get_password_hash
+from backend.core.config import settings
 from backend.db.models.user import User
 from backend.schemas.auth import UpdatePassIn, UpdatePassOut
 from backend.schemas.user import QueryUsersOut, QueryRolesOut, UpdateUserIn, UpdateUserOut, QueryUserIn, DeleteUserIn
 from backend.schemas.user import DeleteUserOut, CurrentUserNameOut, CurrentUserScopeOut
-from backend.db.crud.user import query_users_db, query_roles_db, update_user_db, delete_user_db, update_user_db_password
-from backend.db.crud.user import get_user_db_permission_scopes
+from backend.db.crud.user import query_users_db, get_roles_db, update_user_db, delete_user_db, update_user_db_password
+from backend.db.crud.user import get_user_db_permission_scopes, get_user_db_by_id
 
 router = APIRouter(dependencies=[Depends(authorization)])
 
@@ -35,7 +36,7 @@ def query_users(
     summary="获取角色列表"
 )
 def query_roles(sess: Annotated[Session, Depends(session_db)]):
-    roles_db = query_roles_db(sess)
+    roles_db = get_roles_db(sess)
     return {"message": "角色列表", "data": roles_db}
 
 
@@ -60,16 +61,16 @@ def update_user(
 def update_user_password(
         post_data: UpdatePassIn,
         sess: Annotated[Session, Depends(session_db)],
-        user: Annotated[User, Depends(current_user)]
+        user_db: Annotated[User, Depends(current_user)]
 ):
     """更新用户密码"""
-    if not verify_password(post_data.old_password, user.password):
+    if not verify_password(post_data.old_password, user_db.password):
         raise ServiceException(code="ERR_004", message="原始密码不正确")
 
     hashed_password = get_password_hash(post_data.password1)
     try:
-        user_db = update_user_db_password(sess=sess, user=user, hashed_password=hashed_password)
-        return {"message": "已删除用户ID", "data": user_db.id}
+        user_db = update_user_db_password(sess=sess, user=user_db, hashed_password=hashed_password)
+        return {"message": "用户ID", "data": user_db.id}
     except Exception:
         raise ServiceException(code="ERR_007", message="密码更新失败")
 
@@ -116,3 +117,17 @@ def query_current_user(user_db: Annotated[User, Depends(current_user)]):
         return {"message": "当前用户所有域", "data": get_user_db_permission_scopes(user_db)}
     except Exception:
         raise ServiceException(code="ERR_007", message="获取当前用户所有域失败")
+
+
+@router.get(
+    "/reset_pass",
+    summary="重置用户密码"
+)
+def reset_user_password(user_id: int, sess: Annotated[Session, Depends(session_db)]):
+    try:
+        user_db = get_user_db_by_id(sess, user_id)
+        init_pass = get_password_hash(settings.init_pass)
+        update_user_db_password(sess, user_db, init_pass)
+        return {"message": "初始密码", "data": init_pass}
+    except Exception:
+        raise ServiceException(code="ERR_007", message="重置密码失败")

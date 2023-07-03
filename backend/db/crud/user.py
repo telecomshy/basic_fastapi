@@ -8,8 +8,7 @@ from backend.core.utils import get_password_hash
 def register_user_db(sess: Session, username: str, password: str) -> User:
     """创建用户"""
 
-    hashed_password = get_password_hash(password)
-    user = User(username=username, password=hashed_password, active=True)
+    user = User(username=username, password=password, active=True)
     # 新注册的用户用户都是普通用户
     role = sess.scalar(select(Role).filter_by(role_name="普通用户"))
     user.roles.append(role)
@@ -18,13 +17,13 @@ def register_user_db(sess: Session, username: str, password: str) -> User:
     return user
 
 
-def query_user_db_by_id(sess: Session, user_id: int) -> User | None:
+def get_user_db_by_id(sess: Session, user_id: int) -> User | None:
     """根据用户id获取用户"""
 
     return sess.get(User, user_id)
 
 
-def query_user_db_by_username(sess: Session, username: str) -> User | None:
+def get_user_db_by_username(sess: Session, username: str) -> User | None:
     """根据用户名获取用户"""
 
     stmt = select(User).filter_by(username=username)
@@ -106,7 +105,7 @@ def query_users_db(
     return users_total, users
 
 
-def query_roles_db(sess: Session) -> list[Role]:
+def get_roles_db(sess: Session) -> list[Role]:
     return list(sess.scalars(select(Role)))
 
 

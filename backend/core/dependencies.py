@@ -7,7 +7,7 @@ from backend.core.config import settings
 from backend.core.exceptions import ServiceException
 from backend.core.utils import convert_to_list
 from backend.db.base import SessionDB
-from backend.db.crud.user import query_user_db_by_id, get_user_db_permissions
+from backend.db.crud.user import get_user_db_by_id, get_user_db_permissions
 from backend.db.models.user import User
 from typing import Annotated
 
@@ -43,7 +43,7 @@ def current_user(
     """获取当前用户"""
 
     user_id = payload.get("user_id")
-    return query_user_db_by_id(sess, user_id)
+    return get_user_db_by_id(sess, user_id)
 
 
 class RequiredPermissions:
