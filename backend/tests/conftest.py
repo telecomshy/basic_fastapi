@@ -2,9 +2,9 @@ import pytest
 from fastapi.testclient import TestClient
 from uuid import uuid4
 from sqlalchemy import select
-from backend.db.models.user import User, Role
+from backend.db.models.model_user import User, Role
 from backend.apis.v1.auth import uuid_captcha_mapping
-from backend.db.crud.user import get_user_db_by_username
+from backend.db.crud.crud_user import get_user_by_username
 from backend.db.base import SessionDB
 from backend.main import app
 from backend.core.config import settings
@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 
 def override_current_user(db: Session = Depends(session_db)) -> User:
-    user = get_user_db_by_username(db, settings.test_username)
+    user = get_user_by_username(db, settings.test_username)
     return user
 
 
@@ -58,7 +58,7 @@ def create_test_user():
 
 def delete_test_user():
     with SessionDB() as sess, sess.begin():
-        user = get_user_db_by_username(sess, settings.test_username)
+        user = get_user_by_username(sess, settings.test_username)
         sess.delete(user)
 
 

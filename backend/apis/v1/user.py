@@ -5,63 +5,60 @@ from backend.core.dependencies import session_db, authorization, current_user, R
 from backend.core.exceptions import ServiceException
 from backend.core.utils import verify_password, get_password_hash
 from backend.core.config import settings
-from backend.db.models.user import User
-from backend.schemas.auth import UpdatePassIn, UpdatePassOut
-from backend.schemas.user import QueryUsersOut, QueryRolesOut, UpdateUserIn, UpdateUserOut, QueryUserIn, DeleteUserIn
-from backend.schemas.user import DeleteUserOut, CurrentUserNameOut, CurrentUserScopeOut, ResetUserPasswordOut
-from backend.db.crud.user import query_users_db, get_roles_db, update_user_db, delete_user_db, update_user_db_password
-from backend.db.crud.user import get_user_db_permission_scopes, get_user_db_by_id
+from backend.db.models import model_user
+from backend.schemas import schema_user, schema_auth
+from backend.db.crud import crud_user
 
 router = APIRouter(dependencies=[Depends(authorization)])
 
 
 @router.post(
     "/users",
-    response_model=QueryUsersOut,
+    response_model=schema_user.QueryUsersOut,
     summary="获取用户列表"
 )
 def query_users(
         sess: Annotated[Session, Depends(session_db)],
-        post_data: QueryUserIn
+        post_data: schema_user.QueryUserIn
 ):
     post_data = post_data.dict()
     post_data["page"] = post_data["page"] - 1  # 前端送过来的page从1开始，需要减1
-    users_total, users_db = query_users_db(sess, **post_data)
+    users_total, users_db = crud_user.query_users(sess, **post_data)
     return {"message": "用户总数及用户列表", "data": {"total": users_total, "users": users_db}}
 
 
 @router.get(
     "/roles",
-    response_model=QueryRolesOut,
+    response_model=schema_user.QueryRolesOut,
     summary="获取角色列表"
 )
 def query_roles(sess: Annotated[Session, Depends(session_db)]):
-    roles_db = get_roles_db(sess)
+    roles_db = crud_user.get_roles(sess)
     return {"message": "角色列表", "data": roles_db}
 
 
 @router.post(
     "/update-user",
-    response_model=UpdateUserOut,
+    response_model=schema_user.UpdateUserOut,
     summary="更新用户",
     dependencies=[Depends(RequiredPermissions('update_user'))]
 )
 def update_user(
         sess: Annotated[Session, Depends(session_db)],
-        post_data: UpdateUserIn
+        post_data: schema_user.UpdateUserIn
 ):
     try:
-        user_db = update_user_db(sess, post_data)
+        user_db = crud_user.update_user(sess, post_data)
         return {"message": "已更新用户信息", "data": user_db}
     except Exception:
         raise ServiceException(code="ERR_007", message="用户更新失败")
 
 
-@router.post("/change-pass", summary="修改密码", response_model=UpdatePassOut)
+@router.post("/change-pass", summary="修改密码", response_model=schema_auth.UpdatePassOut)
 def update_user_password(
-        post_data: UpdatePassIn,
+        post_data: schema_auth.UpdatePassIn,
         sess: Annotated[Session, Depends(session_db)],
-        user_db: Annotated[User, Depends(current_user)]
+        user_db: Annotated[model_user.User, Depends(current_user)]
 ):
     """更新用户密码"""
     if not verify_password(post_data.old_password, user_db.password):
@@ -69,7 +66,7 @@ def update_user_password(
 
     hashed_password = get_password_hash(post_data.password1)
     try:
-        user_db = update_user_db_password(sess=sess, user=user_db, hashed_password=hashed_password)
+        user_db = crud_user.update_user_password(sess=sess, user=user_db, hashed_password=hashed_password)
         return {"message": "用户ID", "data": user_db.id}
     except Exception:
         raise ServiceException(code="ERR_007", message="密码更新失败")
@@ -78,18 +75,18 @@ def update_user_password(
 @router.post(
     "/delete-user",
     summary="删除用户",
-    response_model=DeleteUserOut,
+    response_model=schema_user.DeleteUserOut,
     dependencies=[Depends(RequiredPermissions('delete_user'))]
 )
 def delete_users(
         sess: Annotated[Session, Depends(session_db)],
-        post_data: DeleteUserIn
+        post_data: schema_user.DeleteUserIn
 ):
     user_id = post_data.user_id
     users_id = [user_id] if isinstance(user_id, int) else user_id
 
     try:
-        counts = delete_user_db(sess, users_id)
+        counts = crud_user.delete_user(sess, users_id)
         return {"message": "删除用户数", "data": counts}
     except Exception:
         raise ServiceException(code="ERR_007", message="删除用户失败")
@@ -98,9 +95,9 @@ def delete_users(
 @router.get(
     "/current-user",
     summary="获取当前用户名",
-    response_model=CurrentUserNameOut
+    response_model=schema_user.CurrentUserNameOut
 )
-def query_current_user(user_db: Annotated[User, Depends(current_user)]):
+def query_current_user(user_db: Annotated[model_user.User, Depends(current_user)]):
     try:
         return {"message": "当前用户名", "data": user_db.username}
     except Exception:
@@ -110,11 +107,11 @@ def query_current_user(user_db: Annotated[User, Depends(current_user)]):
 @router.get(
     "/current-user-scope",
     summary="获取当前用户所有域",
-    response_model=CurrentUserScopeOut
+    response_model=schema_user.CurrentUserScopeOut
 )
-def query_current_user(user_db: Annotated[User, Depends(current_user)]):
+def query_current_user(user_db: Annotated[model_user.User, Depends(current_user)]):
     try:
-        return {"message": "当前用户所有域", "data": get_user_db_permission_scopes(user_db)}
+        return {"message": "当前用户所有域", "data": crud_user.get_user_permission_scopes(user_db)}
     except Exception:
         raise ServiceException(code="ERR_007", message="获取当前用户所有域失败")
 
@@ -122,17 +119,17 @@ def query_current_user(user_db: Annotated[User, Depends(current_user)]):
 @router.get(
     "/reset-pass",
     summary="重置用户密码",
-    response_model=ResetUserPasswordOut
+    response_model=schema_user.ResetUserPasswordOut
 )
 def reset_user_password(
         sess: Annotated[Session, Depends(session_db)],
         user_id: Annotated[int, Query(alias="userId")],
 ):
     try:
-        user_db = get_user_db_by_id(sess, user_id)
+        user_db = crud_user.get_user_by_id(sess, user_id)
         init_pass = settings.init_password
         hashed_init_pass = get_password_hash(settings.init_password)
-        update_user_db_password(sess, user_db, hashed_init_pass)
+        crud_user.update_user_password(sess, user_db, hashed_init_pass)
         return {"message": "初始密码", "data": init_pass}
     except Exception:
         raise ServiceException(code="ERR_007", message="重置密码失败")

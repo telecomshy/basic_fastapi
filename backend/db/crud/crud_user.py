@@ -1,11 +1,10 @@
-from sqlalchemy.orm import Session, selectinload
-from sqlalchemy import select, func, delete
-from backend.db.models.user import User, Permission, Role
-from backend.schemas.user import UpdateUserIn
-from backend.core.utils import get_password_hash
+from sqlalchemy.orm import Session
+from sqlalchemy import select, func
+from backend.db.models.model_user import User, Permission, Role
+from backend.schemas.schema_user import UpdateUserIn
 
 
-def register_user_db(sess: Session, username: str, password: str) -> User:
+def register_user(sess: Session, username: str, password: str) -> User:
     """创建用户"""
 
     user = User(username=username, password=password, active=True)
@@ -17,13 +16,13 @@ def register_user_db(sess: Session, username: str, password: str) -> User:
     return user
 
 
-def get_user_db_by_id(sess: Session, user_id: int) -> User | None:
+def get_user_by_id(sess: Session, user_id: int) -> User | None:
     """根据用户id获取用户"""
 
     return sess.get(User, user_id)
 
 
-def get_user_db_by_username(sess: Session, username: str) -> User | None:
+def get_user_by_username(sess: Session, username: str) -> User | None:
     """根据用户名获取用户"""
 
     stmt = select(User).filter_by(username=username)
@@ -31,7 +30,7 @@ def get_user_db_by_username(sess: Session, username: str) -> User | None:
     return user
 
 
-def update_user_db_password(sess: Session, user: User, hashed_password: str) -> User:
+def update_user_password(sess: Session, user: User, hashed_password: str) -> User:
     """更新用户密码"""
 
     user.password = hashed_password
@@ -39,7 +38,7 @@ def update_user_db_password(sess: Session, user: User, hashed_password: str) -> 
     return user
 
 
-def get_user_db_permissions(user: User) -> list[Permission]:
+def get_user_permissions(user: User) -> list[Permission]:
     """获取用户所有权限"""
 
     perms = set()
@@ -49,11 +48,11 @@ def get_user_db_permissions(user: User) -> list[Permission]:
     return list(perms)
 
 
-def get_user_db_permission_scopes(user: User) -> list[str]:
+def get_user_permission_scopes(user: User) -> list[str]:
     """获取用户权限域"""
 
     scopes = set()
-    perms = get_user_db_permissions(user)
+    perms = get_user_permissions(user)
 
     for perm in perms:
         scope = perm.perm_rule.split("_")[1]
@@ -62,7 +61,7 @@ def get_user_db_permission_scopes(user: User) -> list[str]:
     return list(scopes)
 
 
-def query_users_db(
+def query_users(
         db: Session,
         page: int = None,
         page_size: int = None,
@@ -105,11 +104,11 @@ def query_users_db(
     return users_total, users
 
 
-def get_roles_db(sess: Session) -> list[Role]:
+def get_roles(sess: Session) -> list[Role]:
     return list(sess.scalars(select(Role)))
 
 
-def update_user_db(sess: Session, update_user: UpdateUserIn):
+def update_user(sess: Session, update_user: UpdateUserIn):
     user = sess.get(User, update_user.id)
     user.email, user.phone_number, user.active = update_user.email, update_user.phone_number, update_user.active
     user.roles = [sess.get(Role, id_) for id_ in update_user.roles]
@@ -118,7 +117,7 @@ def update_user_db(sess: Session, update_user: UpdateUserIn):
     return user
 
 
-def delete_user_db(sess: Session, users_id: list[int]):
+def delete_user(sess: Session, users_id: list[int]):
     # 注意，如果使用sess.execute(delete(User).where(User.id.in_(user_ids)))这样的语句，不会删除关联对象
     for user_id in users_id:
         user = sess.get(User, user_id)
