@@ -143,7 +143,7 @@ def reset_user_password(
 
 
 @router.post(
-    "/create_user",
+    "/create-user",
     summary="创建用户",
     response_model=schema_user.CreateUserOut
 )
@@ -151,6 +151,9 @@ def create_user(
         sess: Annotated[Session, Depends(session_db)],
         post_data: schema_user.CreateUserIn
 ):
+    if crud_user.get_user_by_username(sess, post_data.username):
+        raise ServiceException(code="ERR_002", message="用户已存在")
+
     hashed_password = get_password_hash(settings.init_password)
     try:
         user_id = crud_user.create_user(

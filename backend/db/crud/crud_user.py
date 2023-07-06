@@ -16,11 +16,11 @@ def register_user(sess: Session, username: str, password: str) -> int:
 
 
 def create_user(sess: Session, *, username: str, password: str, roles_id: list[int]) -> User:
-    user = User(username=username, password=password)
+    user = User(username=username, password=password, active=True)
     user.roles.extend([sess.get(Role, role_id) for role_id in roles_id])
     sess.add(user)
     sess.commit()
-    return user
+    return user.id
 
 
 def get_user_by_id(sess: Session, user_id: int) -> User | None:
