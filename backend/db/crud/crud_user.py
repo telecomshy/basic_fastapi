@@ -108,10 +108,10 @@ def get_roles(sess: Session) -> list[Role]:
     return list(sess.scalars(select(Role)))
 
 
-def update_user(sess: Session, update_user: UpdateUserIn):
-    user = sess.get(User, update_user.id)
-    user.email, user.phone_number, user.active = update_user.email, update_user.phone_number, update_user.active
-    user.roles = [sess.get(Role, id_) for id_ in update_user.roles]
+def update_user(sess: Session, sche_user: UpdateUserIn):
+    user = sess.get(User, sche_user.id)
+    user.email, user.phone_number, user.active = sche_user.email, sche_user.phone_number, sche_user.active
+    user.roles = [sess.get(Role, id_) for id_ in sche_user.roles]
     sess.add(user)
     sess.commit()
     return user
