@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 from string import digits, ascii_letters
 from uuid import UUID
 from jose import jwt
-from backend.schemas.schema_auth import RegisterIn, RegisterOut, LoginIn, LoginOut
-from backend.db.crud.crud_user import get_user_by_username, register_user, get_user_permission_scopes
+from backend.schemas import schema_auth
+from backend.db.crud import crud_user
 from backend.core.dependencies import session_db
 from backend.core.utils import verify_password, get_password_hash
 from backend.core.exceptions import ServiceException
@@ -19,32 +19,32 @@ router = APIRouter()
 uuid_captcha_mapping = {}
 
 
-@router.post("/register", summary="用户注册", response_model=RegisterOut)
-def register(register_data: RegisterIn, sess: Annotated[Session, Depends(session_db)]):
+@router.post("/register", summary="用户注册", response_model=schema_auth.RegisterOut)
+def register(register_data: schema_auth.RegisterIn, sess: Annotated[Session, Depends(session_db)]):
     """用户注册"""
 
-    user_db = get_user_by_username(sess, register_data.username)
+    user_db = crud_user.get_user_by_username(sess, register_data.username)
 
     if user_db:
         raise ServiceException(code="ERR_002", message="用户已存在")
 
     try:
         hashed_password = get_password_hash(register_data.password1)
-        user_db = register_user(sess, register_data.username, hashed_password)
-        return {"message": "用户ID", "data": user_db.id}
+        user_id = crud_user.register_user(sess, register_data.username, hashed_password)
+        return {"message": "用户ID", "data": user_id}
     except Exception:
         return ServiceException(code="ERR_007", message="注册失败")
 
 
-@router.post("/login", summary="用户登陆", response_model=LoginOut)
-def login(login_data: LoginIn, sess: Annotated[Session, Depends(session_db)]):
+@router.post("/login", summary="用户登陆", response_model=schema_auth.LoginOut)
+def login(login_data: schema_auth.LoginIn, sess: Annotated[Session, Depends(session_db)]):
     """用户登陆，并添加验证码"""
 
     # 注意，uuid类型是UUID，所以要进行转换
     if login_data.captcha.lower() != uuid_captcha_mapping.get(str(login_data.uuid)):
         raise ServiceException(code="ERR_005", message="验证码错误")
 
-    user_db = get_user_by_username(sess, login_data.username)
+    user_db = crud_user.get_user_by_username(sess, login_data.username)
 
     if user_db is None:
         raise ServiceException(code="ERR_003", message="用户名不存在")
@@ -62,9 +62,7 @@ def login(login_data: LoginIn, sess: Annotated[Session, Depends(session_db)]):
 
     return {
         "message": "用户token",
-        "data": {
-            "token": access_token,
-        }
+        "data": {"token": access_token}
     }
 
 
@@ -89,7 +87,7 @@ def login_openapi(
     """仅用于fastapi openAPI文档的登录"""
 
     username, password = form_data.username, form_data.password
-    user_db = get_user_by_username(db, username)
+    user_db = crud_user.get_user_by_username(db, username)
 
     if user_db is None or not verify_password(password, user_db.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="用户名或密码错误")

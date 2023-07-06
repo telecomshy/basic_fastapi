@@ -25,7 +25,7 @@ class RegisterIn(Password):
 
 
 class RegisterOut(OutDataModel):
-    data: int = Field(title="用户ID")
+    data: int = Field(title="注册用户ID")
 
 
 class LoginIn(BaseModel):

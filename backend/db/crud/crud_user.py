@@ -1,16 +1,23 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 from backend.db.models.model_user import User, Permission, Role
-from backend.schemas.schema_user import UpdateUserIn
 
 
-def register_user(sess: Session, username: str, password: str) -> User:
+def register_user(sess: Session, username: str, password: str) -> int:
     """创建用户"""
 
     user = User(username=username, password=password, active=True)
     # 新注册的用户用户都是普通用户
     role = sess.scalar(select(Role).filter_by(role_name="普通用户"))
     user.roles.append(role)
+    sess.add(user)
+    sess.commit()
+    return user.id
+
+
+def create_user(sess: Session, *, username: str, password: str, roles_id: list[int]) -> User:
+    user = User(username=username, password=password)
+    user.roles.extend([sess.get(Role, role_id) for role_id in roles_id])
     sess.add(user)
     sess.commit()
     return user
@@ -63,11 +70,12 @@ def get_user_permission_scopes(user: User) -> list[str]:
 
 def query_users(
         db: Session,
-        page: int = None,
-        page_size: int = None,
-        roles: list[int] = None,
-        active: bool = None,
-        others: str = None,
+        *,
+        page: int,
+        page_size: int,
+        roles: list[int] | None = None,
+        active: bool | None = None,
+        others: str | None = None,
 ) -> tuple[int, list[User]]:
     """分页获取所有用户"""
 
@@ -108,10 +116,18 @@ def get_roles(sess: Session) -> list[Role]:
     return list(sess.scalars(select(Role)))
 
 
-def update_user(sess: Session, sche_user: UpdateUserIn):
-    user = sess.get(User, sche_user.id)
-    user.email, user.phone_number, user.active = sche_user.email, sche_user.phone_number, sche_user.active
-    user.roles = [sess.get(Role, id_) for id_ in sche_user.roles]
+def update_user(
+        sess: Session,
+        *,
+        user_id: int | None,
+        email: str | None,
+        phone_number: str | None,
+        active: bool,
+        roles_id: list[int]
+) -> User:
+    user = sess.execute(select(User).filter_by(id=user_id)).scalar_one()  # 若不存在则抛出错误
+    user.email, user.phone_number, user.active = email, phone_number, active
+    user.roles_id = [sess.get(Role, id_) for id_ in roles_id]
     sess.add(user)
     sess.commit()
     return user

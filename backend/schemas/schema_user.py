@@ -49,7 +49,7 @@ class UpdateUserIn(BaseModel):
     active: bool = Field(title="用户状态")
     email: str | None = Field(title="邮箱")
     phone_number: str | None = Field(title="手机号码", alias="phoneNumber")
-    roles: conlist(int, min_items=1) = Field(title="角色ID列表")
+    roles_id: conlist(int, min_items=1) = Field(title="角色ID列表", alias="rolesId")
 
 
 class UpdateUserOut(OutDataModel):
@@ -65,7 +65,7 @@ class DeleteUserOut(OutDataModel):
 
 
 class CurrentUserNameOut(OutDataModel):
-    data: str = Field(title="当前用户")
+    data: str = Field(title="当前用户名")
 
 
 class CurrentUserScopeOut(OutDataModel):
@@ -74,3 +74,12 @@ class CurrentUserScopeOut(OutDataModel):
 
 class ResetUserPasswordOut(OutDataModel):
     data: str = Field(title="初始密码")
+
+
+class CreateUserIn(BaseModel):
+    username: str = Field("用户名")
+    roles_id: conlist(int, min_items=1) = Field(title="角色ID列表", alias="rolesId")
+
+
+class CreateUserOut(OutDataModel):
+    data: int = Field("新增用户ID")

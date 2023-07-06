@@ -48,14 +48,21 @@ def update_user(
         post_data: schema_user.UpdateUserIn
 ):
     try:
-        user_db = crud_user.update_user(sess, post_data)
+        user_db = crud_user.update_user(
+            sess,
+            user_id=post_data.id,
+            phone_number=post_data.phone_number,
+            email=post_data.email,
+            roles_id=post_data.roles_id,
+            active=post_data.active
+        )
         return {"message": "已更新用户信息", "data": user_db}
     except Exception:
         raise ServiceException(code="ERR_007", message="用户更新失败")
 
 
 @router.post("/change-pass", summary="修改密码", response_model=schema_auth.UpdatePassOut)
-def update_user_password(
+def change_user_password(
         post_data: schema_auth.UpdatePassIn,
         sess: Annotated[Session, Depends(session_db)],
         user_db: Annotated[model_user.User, Depends(current_user)]
@@ -67,7 +74,7 @@ def update_user_password(
     hashed_password = get_password_hash(post_data.password1)
     try:
         user_db = crud_user.update_user_password(sess=sess, user=user_db, hashed_password=hashed_password)
-        return {"message": "用户ID", "data": user_db.id}
+        return {"message": "已删除用户ID", "data": user_db.id}
     except Exception:
         raise ServiceException(code="ERR_007", message="密码更新失败")
 
@@ -97,7 +104,7 @@ def delete_users(
     summary="获取当前用户名",
     response_model=schema_user.CurrentUserNameOut
 )
-def query_current_user(user_db: Annotated[model_user.User, Depends(current_user)]):
+def get_current_user(user_db: Annotated[model_user.User, Depends(current_user)]):
     try:
         return {"message": "当前用户名", "data": user_db.username}
     except Exception:
@@ -109,7 +116,7 @@ def query_current_user(user_db: Annotated[model_user.User, Depends(current_user)
     summary="获取当前用户所有域",
     response_model=schema_user.CurrentUserScopeOut
 )
-def query_current_user(user_db: Annotated[model_user.User, Depends(current_user)]):
+def get_current_user_scopes(user_db: Annotated[model_user.User, Depends(current_user)]):
     try:
         return {"message": "当前用户所有域", "data": crud_user.get_user_permission_scopes(user_db)}
     except Exception:
@@ -133,3 +140,25 @@ def reset_user_password(
         return {"message": "初始密码", "data": init_pass}
     except Exception:
         raise ServiceException(code="ERR_007", message="重置密码失败")
+
+
+@router.post(
+    "/create_user",
+    summary="创建用户",
+    response_model=schema_user.CreateUserOut
+)
+def create_user(
+        sess: Annotated[Session, Depends(session_db)],
+        post_data: schema_user.CreateUserIn
+):
+    hashed_password = get_password_hash(settings.init_password)
+    try:
+        user_id = crud_user.create_user(
+            sess,
+            username=post_data.username,
+            password=hashed_password,
+            roles_id=post_data.roles_id
+        )
+        return {"message": "新建用户ID", "data": user_id}
+    except Exception:
+        raise ServiceException(code="ERR_007", message="创建用户失败")

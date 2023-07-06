@@ -108,29 +108,3 @@ def test_login_with_error_captcha(client, uuid_and_captcha):
     result = client("/login", json=request_data)
     assert result["code"] == "ERR_005"
     assert result["message"] == "验证码错误"
-
-
-def test_change_password(client, session):
-    request_data = {
-        "old_password": settings.test_password,
-        "password1": "Test_user1_new",
-        "password2": "Test_user1_new"
-    }
-    result = client("/change-pass", json=request_data)
-    assert result["message"] == "已删除用户ID"
-    user_id = result["data"]
-    user = get_user_by_id(session, user_id)
-    assert verify_password("Test_user1_new", user.password)
-    hashed_password = get_password_hash(settings.test_password)
-    update_user_password(session, user, hashed_password)
-
-
-def test_change_password_with_error_password(client):
-    request_data = {
-        "old_password": "error_password",
-        "password1": "Test_user1_new",
-        "password2": "Test_user1_new"
-    }
-    result = client("/change-pass", json=request_data)
-    assert result["code"] == "ERR_004"
-    assert result["message"] == "原始密码不正确"
