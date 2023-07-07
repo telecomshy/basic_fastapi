@@ -12,7 +12,7 @@ from backend.core.dependencies import session_db
 from backend.core.utils.helpers import verify_password, get_password_hash
 from backend.core.exceptions import ServiceException
 from backend.core.config import settings
-from backend.core.utils.captcha import ImageCaptcha
+from backend.core.utils.captcha.image import ImageCaptcha
 from typing import Annotated
 
 router = APIRouter()

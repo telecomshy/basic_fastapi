@@ -1,15 +1,16 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import StreamingResponse, Response, FileResponse
 from sqlalchemy.orm import Session
 from backend.core.dependencies import session_db, authorization, current_user, RequiredPermissions
 from backend.core.exceptions import ServiceException
-from backend.core.utils.helpers import verify_password, get_password_hash
+from backend.core.utils.helpers import verify_password, get_password_hash, query_result_to_csv, query_result_to_file
 from backend.core.config import settings
 from backend.db.models import model_user
 from backend.schemas import schema_user, schema_auth
 from backend.db.crud import crud_user
 
-router = APIRouter(dependencies=[Depends(authorization)])
+router = APIRouter()
 
 
 @router.post(
@@ -165,3 +166,19 @@ def create_user(
         return {"message": "新建用户ID", "data": user_id}
     except Exception:
         raise ServiceException(code="ERR_007", message="创建用户失败")
+
+
+@router.get("/export-csv", response_class=StreamingResponse)
+def export_users(sess: Annotated[Session, Depends(session_db)]):
+    users = crud_user.query_users(sess)[1]
+    header = ["username", "email", "phone_number"]
+    file = query_result_to_csv(header, users)
+    return StreamingResponse(file, media_type="text/csv")
+
+
+@router.get("/export-file", response_class=FileResponse)
+def export_users(sess: Annotated[Session, Depends(session_db)]):
+    users = crud_user.query_users(sess)[1]
+    header = ["username", "email", "phone_number"]
+    query_result_to_file(header, users)
+    return FileResponse("backend/temp_file.csv")

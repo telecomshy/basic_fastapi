@@ -71,8 +71,8 @@ def get_user_permission_scopes(user: User) -> list[str]:
 def query_users(
         db: Session,
         *,
-        page: int,
-        page_size: int,
+        page: int | None = None,
+        page_size: int | None = None,
         roles: list[int] | None = None,
         active: bool | None = None,
         others: str | None = None,
@@ -104,6 +104,7 @@ def query_users(
 
     if page_size is not None:
         stmt = stmt.limit(page_size)
+
     if page is not None:
         stmt = stmt.offset(page * page_size)
 

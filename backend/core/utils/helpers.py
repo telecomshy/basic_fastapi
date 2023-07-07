@@ -1,4 +1,6 @@
 from passlib.context import CryptContext
+import io
+import csv
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -31,3 +33,23 @@ def convert_to_list(*args, unique=False) -> list:
         lst = list(set(lst))
 
     return lst
+
+
+def query_result_to_csv(header, query_result):
+    file = io.StringIO()
+    writer = csv.writer(file, delimiter=",")
+    writer.writerow(header)
+
+    for obj in query_result:
+        writer.writerow([getattr(obj, attr) for attr in header])
+
+    return file
+
+
+def query_result_to_file(header, query_result):
+    with open("backend/temp_file.csv", "w") as f:
+        writer = csv.writer(f, delimiter=",")
+        writer.writerow(header)
+
+        for obj in query_result:
+            writer.writerow([getattr(obj, attr) for attr in header])
