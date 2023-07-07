@@ -170,10 +170,14 @@ def create_user(
 
 @router.get("/export-csv", response_class=StreamingResponse)
 def export_users(sess: Annotated[Session, Depends(session_db)]):
-    users = crud_user.query_users(sess)[1]
-    header = ["username", "email", "phone_number"]
-    file = query_result_to_csv(header, users)
-    return StreamingResponse(file, media_type="text/csv")
+    # users = crud_user.query_users(sess)[1]
+    # header = ["username", "email", "phone_number"]
+    # file = query_result_to_csv(header, users)
+    def iter_file():
+        with open('backend/temp_file.csv', 'rb') as f:
+            yield from f
+
+    return StreamingResponse(iter_file(), media_type="text/csv")
 
 
 @router.get("/export-file", response_class=FileResponse)
