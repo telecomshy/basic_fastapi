@@ -9,7 +9,7 @@ from backend.db.base import SessionDB
 from backend.main import app
 from backend.core.config import settings
 from backend.core.dependencies import current_user, session_db, authorization
-from backend.core.utils import get_password_hash
+from backend.core.utils.helpers import get_password_hash
 from fastapi import Depends
 from sqlalchemy.orm import Session
 

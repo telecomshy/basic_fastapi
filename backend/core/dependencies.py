@@ -5,7 +5,7 @@ from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from backend.core.config import settings
 from backend.core.exceptions import ServiceException
-from backend.core.utils import convert_to_list
+from backend.core.utils.helpers import convert_to_list
 from backend.db.base import SessionDB
 from backend.db.crud.crud_user import get_user_by_id, get_user_permissions
 from backend.db.models.model_user import User

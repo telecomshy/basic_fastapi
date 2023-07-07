@@ -1,6 +1,6 @@
 from backend.core.config import settings
 from backend.db.crud import crud_user
-from backend.core.utils import verify_password, get_password_hash
+from backend.core.utils.helpers import verify_password, get_password_hash
 
 
 def test_get_users(client, session):

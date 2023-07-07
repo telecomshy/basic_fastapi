@@ -1,6 +1,6 @@
 from pydantic import BaseModel as PydanticBaseModel, validator, Field
 from typing import Any
-from backend.core.utils import to_camel
+from backend.core.utils.helpers import to_camel
 
 
 class BaseModel(PydanticBaseModel):
